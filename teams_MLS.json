@@ -1,0 +1,238 @@
+{
+"league_name": "Major League Soccer", 
+"teams": 
+[
+  {
+    "name": "Atlanta United FC",
+    "venue": "Mercedes-Benz Stadium",
+    "coordinates": {
+      "lat": 33.75549,
+      "lon": -84.40199
+    }
+  ,"state":"Georgia"},
+  {
+    "name": "Austin FC",
+    "venue": "Q2 Stadium",
+    "coordinates": {
+      "lat": 30.2000,
+      "lon": -97.7181
+    }
+  ,"state":"Texas"},
+  {
+    "name": "CF Montréal",
+    "venue": "Saputo Stadium",
+    "coordinates": {
+      "lat": 45.5417,
+      "lon": -73.5775
+    }
+,"state":"Quebec"},
+  {
+    "name": "Charlotte FC",
+    "venue": "Bank of America Stadium",
+    "coordinates": {
+      "lat": 35.22585,
+      "lon": -80.85361
+    }
+  ,"state":"North Carolina"},
+  {
+    "name": "Chicago Fire FC",
+    "venue": "Soldier Field",
+    "coordinates": {
+      "lat": 41.86237,
+      "lon": -87.61726
+    }
+  ,"state":"Illinois"},
+  {
+    "name": "FC Cincinnati",
+    "venue": "TQL Stadium",
+    "coordinates": {
+      "lat": 39.1031,
+      "lon": -84.5120
+    }
+  ,"state":"Ohio"},
+  {
+    "name": "Colorado Rapids",
+    "venue": "Dick’s Sporting Goods Park",
+    "coordinates": {
+      "lat": 39.8061,
+      "lon": -104.8938
+    }
+  ,"state":"Coloradp"},
+  {
+    "name": "Columbus Crew SC",
+    "venue": "Lower.com Field",
+    "coordinates": {
+      "lat": 39.9678,
+      "lon": -83.0077
+    }
+  ,"state":"Ohio"},
+  {
+    "name": "D.C. United",
+    "venue": "Audi Field",
+    "coordinates": {
+      "lat": 38.8883,
+      "lon": -77.0208
+    }
+  ,"state":"District of Columbia"},
+  {
+    "name": "Inter Miami CF",
+    "venue": "Chase Stadium",
+    "coordinates": {
+      "lat": 26.1475,
+      "lon": -80.2723
+    }
+  ,"state":"Florida"},
+  {
+    "name": "FC Dallas",
+    "venue": "Toyota Stadium",
+    "coordinates": {
+      "lat": 33.154320,
+      "lon": -96.835426
+    }
+  ,"state":"Texas"},
+  {
+    "name": "Houston Dynamo",
+    "venue": "Shell Energy Stadium",
+    "coordinates": {
+      "lat": 29.7517,
+      "lon": -95.3626
+    }
+  ,"state":"Texas"},
+  {
+    "name": "LA Galaxy",
+    "venue": "Dignity Health Sports Park",
+    "coordinates": {
+      "lat": 33.8642,
+      "lon": -118.2610
+    }
+  ,"state":"California"},
+  {
+    "name": "Los Angeles FC",
+    "venue": "BMO Stadium",
+    "coordinates": {
+      "lat": 34.012772,
+      "lon": -118.284627
+    }
+  ,"state":"California"},
+  {
+    "name": "Minnesota United FC",
+    "venue": "Allianz Field",
+    "coordinates": {
+      "lat": 44.9486,
+      "lon": -93.0934
+    }
+  ,"state":"Minnesota"},
+  {
+    "name": "Nashville SC",
+    "venue": "Geodis Park",
+    "coordinates": {
+      "lat": 36.1659,
+      "lon": -86.7850
+    }
+  ,"state":"Tennessee"},
+  {
+    "name": "New England Revolution",
+    "venue": "Gillette Stadium",
+    "coordinates": {
+      "lat": 42.09094,
+      "lon": -71.26434
+    }
+  ,"state":"Massachusetts"},
+  {
+    "name": "New York City FC",
+    "venue": "Yankee Stadium",
+    "coordinates": {
+      "lat": 40.82917,
+      "lon": -73.92639
+    }
+  ,"state":"New York"},
+  {
+    "name": "New York Red Bulls",
+    "venue": "Red Bull Arena",
+    "coordinates": {
+      "lat": 40.8120,
+      "lon": -74.0744
+    }
+  ,"state":"New York"},
+  {
+    "name": "Orlando City SC",
+    "venue": "Inter&Co Stadium",
+    "coordinates": {
+      "lat": 28.5392,
+      "lon": -81.3839
+    }
+  ,"state":"Florida"},
+  {
+    "name": "Philadelphia Union",
+    "venue": "Subaru Park",
+    "coordinates": {
+      "lat": 39.9175,
+      "lon": -75.3550
+    }
+  ,"state":"Pennsylvania"},
+  {
+    "name": "Portland Timbers",
+    "venue": "Providence Park",
+    "coordinates": {
+      "lat": 45.5200,
+      "lon": -122.6886
+    }
+  ,"state":"Oregon"},
+  {
+    "name": "Real Salt Lake",
+    "venue": "America First Field",
+    "coordinates": {
+      "lat": 40.5829,
+      "lon": -111.8934
+    }
+  ,"state":"Utah"},
+  {
+    "name": "San Diego FC",
+    "venue": "Snapdragon Stadium",
+    "coordinates": {
+      "lat": 32.784444,
+      "lon": -117.122833
+    }
+  ,"state":"California"},
+  {
+    "name": "San Jose Earthquakes",
+    "venue": "PayPal Park",
+    "coordinates": {
+      "lat": 37.35139,
+      "lon": -121.92500
+    }
+  ,"state":"California"},
+  {
+  "name": "Sporting Kansas City",
+  "venue": "Children’s Mercy Park",
+  "coordinates": {
+    "lat": 39.1219,
+    "lon": -94.8233
+  }
+  ,"state":"Missouri"},
+  {
+    "name": "St. Louis City SC",
+    "venue": "Energizer Park",
+    "coordinates": {
+      "lat": 38.631340,
+      "lon": -90.210594
+    }
+  ,"state":"Missouri"},
+  {
+    "name": "Toronto FC",
+    "venue": "BMO Field",
+    "coordinates": {
+      "lat": 43.6426,
+      "lon": -79.3895
+    }
+  ,"state":"Ontario"},
+  {
+    "name": "Vancouver Whitecaps FC",
+    "venue": "BC Place",
+    "coordinates": {
+      "lat": 49.2779,
+      "lon": -123.1159
+    }
+  ,"state":"British Columbia"}
+]
+}

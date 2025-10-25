@@ -1,0 +1,38 @@
+{
+"league_name": "National Football League", 
+"teams": [
+  {"name":"Arizona Cardinals","venue":"State Farm Stadium","coordinates":{"lat":33.52728,"lon":-112.26328},"state":"Arizona"},
+  {"name":"Atlanta Falcons","venue":"Mercedes-Benz Stadium","coordinates":{"lat":33.75549,"lon":-84.40199},"state":"Georgia"},
+  {"name":"Baltimore Ravens","venue":"M&T Bank Stadium","coordinates":{"lat":39.27806,"lon":-76.62278},"state":"Maryland"},
+  {"name":"Buffalo Bills","venue":"Highmark Stadium","coordinates":{"lat":42.77361,"lon":-78.78694},"state":"New York"},
+  {"name":"Carolina Panthers","venue":"Bank of America Stadium","coordinates":{"lat":35.22585,"lon":-80.85361},"state":"North Carolina"},
+  {"name":"Chicago Bears","venue":"Soldier Field","coordinates":{"lat":41.86237,"lon":-87.61726},"state":"Illinois"},
+  {"name":"Cincinnati Bengals","venue":"Paycor Stadium","coordinates":{"lat":39.09544,"lon":-84.51604},"state":"Ohio"},
+  {"name":"Cleveland Browns","venue":"Cleveland Browns Stadium","coordinates":{"lat":41.50604,"lon":-81.70006},"state":"Ohio"},
+  {"name":"Dallas Cowboys","venue":"AT&T Stadium","coordinates":{"lat":32.74784,"lon":-97.09363},"state":"Texas"},
+  {"name":"Denver Broncos","venue":"Empower Field at Mile High","coordinates":{"lat":39.74413,"lon":-105.02083},"state":"Colorado"},
+  {"name":"Detroit Lions","venue":"Ford Field","coordinates":{"lat":42.34012,"lon":-83.04634},"state":"Michigan"},
+  {"name":"Green Bay Packers","venue":"Lambeau Field","coordinates":{"lat":44.50131,"lon":-88.06232},"state":"Wisconsin"},
+  {"name":"Houston Texans","venue":"NRG Stadium","coordinates":{"lat":29.68486,"lon":-95.41167},"state":"Texas"},
+  {"name":"Indianapolis Colts","venue":"Lucas Oil Stadium","coordinates":{"lat":39.76006,"lon":-86.16381},"state":"Indiana"},
+  {"name":"Jacksonville Jaguars","venue":"EverBank Stadium","coordinates":{"lat":30.32479,"lon":-81.63786},"state":"Floria"},
+  {"name":"Kansas City Chiefs","venue":"Arrowhead Stadium","coordinates":{"lat":39.04879,"lon":-94.48457},"state":"Missouri"},
+  {"name":"Las Vegas Raiders","venue":"Allegiant Stadium","coordinates":{"lat":36.09079,"lon":-115.18395},"state":"California"},
+  {"name":"Los Angeles Chargers","venue":"SoFi Stadium","coordinates":{"lat":33.95359,"lon":-118.33963},"state":"California"},
+  {"name":"Los Angeles Rams","venue":"SoFi Stadium","coordinates":{"lat":33.95359,"lon":-118.33963},"state":"California"},
+  {"name":"Miami Dolphins","venue":"Hard Rock Stadium","coordinates":{"lat":25.95796,"lon":-80.23931},"state":"Floria"},
+  {"name":"Minnesota Vikings","venue":"U.S. Bank Stadium","coordinates":{"lat":44.97377,"lon":-93.25874},"state":"Minnesota"},
+  {"name":"New England Patriots","venue":"Gillette Stadium","coordinates":{"lat":42.09094,"lon":-71.26434},"state":"Massachusetts"},
+  {"name":"New Orleans Saints","venue":"Caesars Superdome","coordinates":{"lat":29.95144,"lon":-90.08197},"state":"Louisiana"},
+  {"name":"New York Giants","venue":"MetLife Stadium","coordinates":{"lat":40.81361,"lon":-74.07444},"state":"New York"},
+  {"name":"New York Jets","venue":"MetLife Stadium","coordinates":{"lat":40.81361,"lon":-74.07444},"state":"New York"},
+  {"name":"Philadelphia Eagles","venue":"Lincoln Financial Field","coordinates":{"lat":39.90090,"lon":-75.16810},"state":"Pennsylvania"},
+  {"name":"Pittsburgh Steelers","venue":"Acrisure Stadium","coordinates":{"lat":40.43972,"lon":-80.01583},"state":"Pennsylvania"},
+  {"name":"San Francisco 49ers","venue":"Levi’s Stadium","coordinates":{"lat":37.40393,"lon":-121.97087},"state":""},
+  {"name":"Seattle Seahawks","venue":"Lumen Field","coordinates":{"lat":47.59510,"lon":-122.33224},"state":"Washington"},
+  {"name":"Tampa Bay Buccaneers","venue":"Raymond James Stadium","coordinates":{"lat":27.97601,"lon":-82.50367},"state":"Floria"},
+  {"name":"Tennessee Titans","venue":"Nissan Stadium","coordinates":{"lat":36.16639,"lon":-86.77139},"state":"Tennessee"},
+  {"name":"Washington Commanders","venue":"Northwest Stadium (formerly FedExField)","coordinates":{"lat":38.90773,"lon":-76.86429},"state":"District of Columbia"}
+]
+}
+

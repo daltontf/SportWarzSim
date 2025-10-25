@@ -1,0 +1,36 @@
+{
+"league_name": "Major League Baseball", 
+"teams": 
+[
+  {"name":"Arizona Diamondbacks","venue":"Chase Field","coordinates":{"lat":33.445564,"lon":-112.067413},"state":"Arizona"},
+  {"name":"Atlanta Braves","venue":"Truist Park","coordinates":{"lat":33.890781,"lon":-84.468239},"state":"Georgia"},
+  {"name":"Baltimore Orioles","venue":"Oriole Park at Camden Yards","coordinates":{"lat":39.284176,"lon":-76.622368},"state":"Maryland"},
+  {"name":"Boston Red Sox","venue":"Fenway Park","coordinates":{"lat":42.346613,"lon":-71.098817},"state":"Massachusetts"},
+  {"name":"Chicago Cubs","venue":"Wrigley Field","coordinates":{"lat":41.947201,"lon":-87.656413},"state":"Illinois"},
+  {"name":"Chicago White Sox","venue":"Guaranteed Rate Field","coordinates":{"lat":41.830883,"lon":-87.635083},"state":"Illinois"},
+  {"name":"Cincinnati Reds","venue":"Great American Ball Park","coordinates":{"lat":39.0975,"lon":-84.507103},"state":"Ohio"},
+  {"name":"Cleveland Guardians","venue":"Progressive Field","coordinates":{"lat":41.496262,"lon":-81.686043},"state":"Ohio"},
+  {"name":"Colorado Rockies","venue":"Coors Field","coordinates":{"lat":39.756229,"lon":-104.994865},"state":"Colorado"},
+  {"name":"Detroit Tigers","venue":"Comerica Park","coordinates":{"lat":42.346354,"lon":-83.059619},"state":"Michigan"},
+  {"name":"Houston Astros","venue":"Minute Maid Park","coordinates":{"lat":29.757017,"lon":-95.356209},"state":"Texas"},
+  {"name":"Kansas City Royals","venue":"Kauffman Stadium","coordinates":{"lat":39.051910,"lon":-94.480682},"state":"Missouri"},
+  {"name":"Los Angeles Angels","venue":"Angel Stadium of Anaheim","coordinates":{"lat":33.800560,"lon":-117.883438},"state":"California"},
+  {"name":"Los Angeles Dodgers","venue":"Dodger Stadium","coordinates":{"lat":34.073814,"lon":-118.240784},"state":"California"},
+  {"name":"Miami Marlins","venue":"LoanDepot Park","coordinates":{"lat":25.778301,"lon":-80.220352},"state":"Florida"},
+  {"name":"Milwaukee Brewers","venue":"American Family Field","coordinates":{"lat":43.027954,"lon":-87.971497},"state":"Wisconsin"},
+  {"name":"Minnesota Twins","venue":"Target Field","coordinates":{"lat":44.982075,"lon":-93.278435},"state":"Minnesota"},
+  {"name":"New York Mets","venue":"Citi Field","coordinates":{"lat":40.757256,"lon":-73.846237},"state":"New York"},
+  {"name":"New York Yankees","venue":"Yankee Stadium","coordinates":{"lat":40.82916667,"lon":-73.92638889},"state":"New York"},
+  {"name":"Athletics","venue":"RingCentral Coliseum","coordinates":{"lat":37.751637,"lon":-122.201553},"state":"California"},
+  {"name":"Philadelphia Phillies","venue":"Citizens Bank Park","coordinates":{"lat":39.906216,"lon":-75.167465},"state":"Pennsylvania"},
+  {"name":"Pittsburgh Pirates","venue":"PNC Park","coordinates":{"lat":40.447105,"lon":-80.006363},"state":"California"},
+  {"name":"San Diego Padres","venue":"Petco Park","coordinates":{"lat":32.707415,"lon":-117.157216},"state":"California"},
+  {"name":"San Francisco Giants","venue":"Oracle Park","coordinates":{"lat":37.778572,"lon":-122.389717},"state":"California"},
+  {"name":"Seattle Mariners","venue":"T-Mobile Park","coordinates":{"lat":47.591480,"lon":-122.332863},"state":"Washington"},
+  {"name":"St. Louis Cardinals","venue":"Busch Stadium","coordinates":{"lat":38.626004,"lon":-90.188538},"state":"Missouri"},
+  {"name":"Tampa Bay Rays","venue":"Tropicana Field","coordinates":{"lat":27.768284,"lon":-82.653961},"state":"Florida"},
+  {"name":"Texas Rangers","venue":"Globe Life Field","coordinates":{"lat":32.751333,"lon":-97.082778},"state":"Texas"},
+  {"name":"Toronto Blue Jays","venue":"Rogers Centre","coordinates":{"lat":43.641444,"lon":-79.389417},"state":"Ontario"},
+  {"name":"Washington Nationals","venue":"Nationals Park","coordinates":{"lat":38.873055,"lon":-77.007996},"state":"District of Columbia"}
+]
+}
