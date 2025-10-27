@@ -17,7 +17,7 @@ This is an attempt to apply a mathematical model to US counties to predict the l
 
     - If teams other than the nearest team with have an effective distance that is longer. 
 
-    - Teams in other states will have a effective multiplier.
+    - Teams in other states will have a effective distance multiplier.
 
 #### "Fun" I'd like to be able to do
 - Model expansion and relocation to see if fans are gained and how existing fan bases might shift
@@ -28,7 +28,7 @@ This is an attempt to apply a mathematical model to US counties to predict the l
 - Residual loyalty to a relocated team like the Raiders in LA.
 - In baseball, having a minor league affiliate in a remote county should increase loyalty even over a closer market. 
 - "America's Teams": The NY Times maps shows Yankees, Red Sox, Lakers, Heat fandom in remote places. Perhaps there should be a bottom to a teams distance degradation.
-- Presences of major college programs in basketball and football could impact pro fandom.
+- Presences of lower league teams or major college programs in basketball and football could impact pro fandom.
 - Competition for the other sports
 - Oh, Canada!
 
