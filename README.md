@@ -30,8 +30,10 @@ This is an attempt to apply a mathematical model to US counties to predict the l
 - "America's Teams": The NY Times maps shows Yankees, Red Sox, Lakers, Heat fandom in remote places. Perhaps there should be a bottom to a teams distance degradation.
 - Presences of major college programs in basketball and football could impact pro fandom.
 - Competition for the other sports
+- Oh, Canada!
 
 #### Quirks that likely won't be mitigated.
 - Distance is direct "as the crow flies". This leads to quirks where teams in Michigan are more loyal to Green Bay than they likely are. 
 - A farther market may be easier to travel to. Springfield Missouri is closer to Kansas City than St. Louis, but has more Cardinals fans. Recently the Cardinal put a AA affiliate there but mostly because I-44.
+- Since the NFL's Giant and Jets play in the same venue, it will be a challenge to program in the geographic tendencies on those two teams. 
 
