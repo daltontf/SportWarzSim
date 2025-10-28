@@ -2,7 +2,7 @@
 "league_name": "Nation Basketball Association", 
 "teams": 
 [
-  {"name":"Atlanta Hawks","venue":"State Farm Arena","coordinates":{"lat":33.757290,"lon":-84.397331},"state":"Georgia"},
+  {"name":"Atlanta Hawks","venue":"State Farm Arena","L":0.5,"S":0.0,"coordinates":{"lat":33.757290,"lon":-84.397331},"state":"Georgia"},
   {"name":"Boston Celtics","venue":"TD Garden","coordinates":{"lat":42.366303,"lon":-71.062228},"state":"Massachusetts"},
   {"name":"Brooklyn Nets","venue":"Barclays Center","coordinates":{"lat":40.682650,"lon":-73.974689},"state":"New York"},
   {"name":"Charlotte Hornets","venue":"Spectrum Center","coordinates":{"lat":35.225000,"lon":-80.839167},"state":"North Carolina"},

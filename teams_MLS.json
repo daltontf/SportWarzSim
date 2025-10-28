@@ -5,6 +5,7 @@
   {
     "name": "Atlanta United FC",
     "venue": "Mercedes-Benz Stadium",
+    "L":0.5,"S":-0.5,
     "coordinates": {
       "lat": 33.75549,
       "lon": -84.40199

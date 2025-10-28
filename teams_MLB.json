@@ -27,7 +27,7 @@
   {"name":"San Diego Padres","venue":"Petco Park","coordinates":{"lat":32.707415,"lon":-117.157216},"state":"California"},
   {"name":"San Francisco Giants","venue":"Oracle Park","coordinates":{"lat":37.778572,"lon":-122.389717},"state":"California"},
   {"name":"Seattle Mariners","venue":"T-Mobile Park","coordinates":{"lat":47.591480,"lon":-122.332863},"state":"Washington"},
-  {"name":"St. Louis Cardinals","venue":"Busch Stadium","coordinates":{"lat":38.626004,"lon":-90.188538},"state":"Missouri"},
+  {"name":"St. Louis Cardinals","venue":"Busch Stadium","L":0.9,"S":-0.5,"coordinates":{"lat":38.626004,"lon":-90.188538},"state":"Missouri"},
   {"name":"Tampa Bay Rays","venue":"Tropicana Field","coordinates":{"lat":27.768284,"lon":-82.653961},"state":"Florida"},
   {"name":"Texas Rangers","venue":"Globe Life Field","coordinates":{"lat":32.751333,"lon":-97.082778},"state":"Texas"},
   {"name":"Toronto Blue Jays","venue":"Rogers Centre","coordinates":{"lat":43.641444,"lon":-79.389417},"state":"Ontario"},

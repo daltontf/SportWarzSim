@@ -1,7 +1,7 @@
 {
 "league_name": "National Hockey League", 
 "teams": [
-  {"name":"Anaheim Ducks","venue":"Honda Center","coordinates":{"lat":33.807525,"lon":-117.876707},"state":"California"},
+  {"name":"Anaheim Ducks","venue":"Honda Center","L":0.5,"S":-0.1,"coordinates":{"lat":33.807525,"lon":-117.876707},"state":"California"},
   {"name":"Boston Bruins","venue":"TD Garden","coordinates":{"lat":42.366245,"lon":-71.062485},"state":"Massachusetts"},
   {"name":"Buffalo Sabres","venue":"KeyBank Center","coordinates":{"lat":42.875588,"lon":-78.876382},"state":"New York"},
   {"name":"Calgary Flames","venue":"Scotiabank Saddledome","coordinates":{"lat":51.037007,"lon":-114.062721},"state":"Alberta"},

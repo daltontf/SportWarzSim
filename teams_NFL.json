@@ -1,7 +1,7 @@
 {
 "league_name": "National Football League", 
 "teams": [
-  {"name":"Arizona Cardinals","venue":"State Farm Stadium","coordinates":{"lat":33.52728,"lon":-112.26328},"state":"Arizona"},
+  {"name":"Arizona Cardinals","venue":"State Farm Stadium","L":0.25,"S":0.0,"coordinates":{"lat":33.52728,"lon":-112.26328},"state":"Arizona"},
   {"name":"Atlanta Falcons","venue":"Mercedes-Benz Stadium","coordinates":{"lat":33.75549,"lon":-84.40199},"state":"Georgia"},
   {"name":"Baltimore Ravens","venue":"M&T Bank Stadium","coordinates":{"lat":39.27806,"lon":-76.62278},"state":"Maryland"},
   {"name":"Buffalo Bills","venue":"Highmark Stadium","coordinates":{"lat":42.77361,"lon":-78.78694},"state":"New York"},
