@@ -25,10 +25,11 @@ class League(TypedDict):
     league_name: str
     teams: list[Team]
 
-def load_counties_data():
+def load_counties_geojson():
     with open("./counties.geojson") as f:
-        counties_geojson = json.load(f)
-      
+        return json.load(f)
+
+def load_counties_data(counties_geojson):
     co_data_frame = pd.read_csv('./co-est2024-alldata.csv', encoding='iso-8859-1')
 
     for feature in counties_geojson["features"]:
@@ -46,7 +47,7 @@ def load_counties_data():
         except Exception as e:
             print(e)
             print("Invalid coordinates:", feature["properties"]["Name"])  
-    return (counties_geojson, co_data_frame)
+    return co_data_frame
 
 def add_teams_and_distances(leagues, co_data_frame):
     for league in leagues.keys():
