@@ -181,7 +181,7 @@ def reset_county_styles(counties_geojson):
     for feature in counties_geojson["features"]:
         feature["properties"]["style"] = default_style    
 
-def heatmap_counties(leagues, counties_geojson, league_name, share_theshold = 0.05): 
+def heatmap_counties(leagues, counties_geojson, league_name, share_threshold = 0.05): 
     for feature in counties_geojson["features"]:
        state = feature["properties"]["STATEFP"]
        county = feature["properties"]["COUNTYFP"]
@@ -190,7 +190,7 @@ def heatmap_counties(leagues, counties_geojson, league_name, share_theshold = 0.
            group_cols = list(county_rows.columns.difference(["share"]))
            county_rows = county_rows.groupby(group_cols, as_index=False).max().sort_values(by="share", ascending=False)
            county_row = county_rows.iloc[0]
-           if county_row["share"] > share_theshold:   
+           if county_row["share"] > share_threshold:   
                 feature["properties"]["style"] = {
                 "color": "grey",
                 "weight": 1,
@@ -228,10 +228,9 @@ def render_map(leagues, counties_geojson, co_data_frame):
                 if county_row["share"] > 0.03:
                     leagues_table += (
                         "<tr>"  
-                        f"<td>{county_row["league"]}</td>" 
-                        f"<td>{county_row["team_name"]}</td>" 
-                        f"<td>{round(county_row["share"] * 100, 1)}%</td>" 
-                        # f"<td>{county_row["fans"]}</td>" 
+                        f"<td>{county_row['league']}</td>" 
+                        f"<td>{county_row['team_name']}</td>" 
+                        f"<td>{round(county_row['share'] * 100, 1)}%</td>" 
                         "</tr>")
        
             popup = Popup(location=(centroid.y, centroid.x), 
