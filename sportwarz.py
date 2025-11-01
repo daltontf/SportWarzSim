@@ -103,9 +103,9 @@ def opacity_for_population(population):
 
 def compute_shares(leagues, co_data_frame):
     distance_decay_numerator = .01 
-    competition_temperature = 1.25 # Lower -> winner takes it
-    not_nearest_multiplier = 2.0 # added to distance multiplied (d - nearest_d) 
-    not_same_state_multiplier = 2.0 # TODO might need bigger multipler if different country, eh
+    competition_temperature = 1.5 # Lower -> winner takes it
+    not_nearest_multiplier = 3.0 # added to distance multiplied (d - nearest_d) 
+    not_same_state_multiplier = 3 # TODO might need bigger multiplier if different country, eh
     nearest_key = "nearest"
     
     for league in leagues.keys(): 
@@ -139,12 +139,13 @@ def compute_shares(leagues, co_data_frame):
                     nearest_effective_d = effective_d 
                 team_distance_decay = distance_decay_numerator / t["L"]     
                 D = np.exp(-team_distance_decay * effective_d) 
-                DS = np.exp(-team_distance_decay * effective_d * 2)  #short term enthusisam dissipates faster             
+                DS = np.exp(-team_distance_decay * effective_d * 2)  #short term enthusiasm dissipates faster             
                 R[j] = ((league_weight * 10) + t["L"]  * D)  + ((league_weight * 10) + t["S"] * DS)   
 
             expR[i] = np.exp(R / competition_temperature)
             raw_shares =  expR[i] / expR[i].sum(keepdims=True)
             
+            # if a given team has less than 1/#num team share then the share is given to non-fan(for now)
             accum = 0
             for j in range(len(raw_shares)):
                 if raw_shares[j] < 1 / len(leagues[league]["teams"]):
