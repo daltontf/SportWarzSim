@@ -85,25 +85,25 @@ def haversine_miles(centroid, lat2, lon2):
 def opacity_for_population(population): 
     if population > 5000000:
         return 0.9
-    if population > 2000000:
-        return 0.8
     if population > 1000000:
-        return 0.7  
+        return 0.8
     if population > 500000:
-        return 0.6 
+        return 0.7  
     if population > 100000:
-        return 0.5 
+        return 0.6 
     if population > 50000:
-        return 0.4
+        return 0.5
     if population > 10000:
-        return 0.3
+        return 0.4
     if population > 5000:
+        return 0.3
+    if population > 1000:
         return 0.2
     return 0.1
 
 def compute_shares(leagues, co_data_frame):
-    distance_decay = 0.005 
-    competition_temperature = .5 # Lower -> winner takes it
+    distance_decay_numerator = .01 
+    competition_temperature = 1.25 # Lower -> winner takes it
     not_nearest_multiplier = 2.0 # added to distance multiplied (d - nearest_d) 
     not_same_state_multiplier = 2.0 # TODO might need bigger multipler if different country, eh
     nearest_key = "nearest"
@@ -111,7 +111,7 @@ def compute_shares(leagues, co_data_frame):
     for league in leagues.keys(): 
         d = leagues[league]["distances"] 
 
-        R = np.zeros((len(d), len(d[0]) + 1), dtype=float)
+        expR = np.zeros((len(d), len(d[0]) + 1), dtype=float)
         league_weight = leagues[league]['json']["weight"]
         co_data_frame[nearest_key] = float('nan')
         for j, t in leagues[league]["teams"].iterrows():
@@ -124,6 +124,7 @@ def compute_shares(leagues, co_data_frame):
             nearest_d = c[nearest_key]
             nearest_effective_d = 1000000
             county_state = c["STNAME"]
+            R = np.zeros_like(expR[i])
             for j, t in leagues[league]["teams"].iterrows():
                 effective_d = d[i,j]
                 if not pd.isna(nearest_d) and effective_d > nearest_d:
@@ -135,16 +136,24 @@ def compute_shares(leagues, co_data_frame):
                 elif county_state != team_state:
                     effective_d *= not_same_state_multiplier    
                 if effective_d < nearest_effective_d:
-                    nearest_effective_d = effective_d  
-                D = np.exp(-distance_decay * effective_d) 
-                DS = np.exp(-distance_decay * effective_d * 2)  # short term enthusisam dissipates faster             
-                R[i,j] = (league_weight + t["L"]  * D) + (league_weight + t["S"] * DS)   
-            not_fan_D = 1 - np.exp(-distance_decay * effective_d * league_weight)
-            not_fan_R = (11 - league_weight * (1 - not_fan_D)) / 4 # (league_weight / 2) #TODO constants!?
-            R[i,len(leagues[league]["teams"])] = not_fan_R
+                    nearest_effective_d = effective_d 
+                team_distance_decay = distance_decay_numerator / t["L"]     
+                D = np.exp(-team_distance_decay * effective_d) 
+                DS = np.exp(-team_distance_decay * effective_d * 2)  #short term enthusisam dissipates faster             
+                R[j] = ((league_weight * 10) + t["L"]  * D)  + ((league_weight * 10) + t["S"] * DS)   
 
-        expR = np.exp(R / competition_temperature)
-        leagues[league]["shares"] =  expR / expR.sum(axis=1, keepdims=True)
+            expR[i] = np.exp(R / competition_temperature)
+            raw_shares =  expR[i] / expR[i].sum(keepdims=True)
+            
+            accum = 0
+            for j in range(len(raw_shares)):
+                if raw_shares[j] < 1 / len(leagues[league]["teams"]):
+                    accum += expR[i,j]
+                    expR[i,j] = 0
+    
+            expR[i, -1] = accum / league_weight
+
+        leagues[league]["shares"] =  expR / expR.sum(axis=1, keepdims=True)        
 
 def compute_output_dataframes(leagues, co_data_frame):
     for league in leagues.keys(): 
@@ -166,6 +175,7 @@ def compute_output_dataframes(leagues, co_data_frame):
                         "team_name": t["name"],
                         "color": t["color"],
                         "share_population": share_population,
+                        "effective_distance": d[i,j],
                         "share": share,
                 })
         leagues[league]["dataframes"] = pd.DataFrame(dataframe_out)    
@@ -205,7 +215,10 @@ def heatmap_counties(leagues, counties_geojson, league_name, share_threshold = 0
         #         "fillOpacity": opacity_for_population(county_row["population"])
         #        }    
 
-def render_map(leagues, counties_geojson, co_data_frame):
+def render_map(leagues, only_league, counties_geojson, co_data_frame):
+    if only_league: # Only show pop-up for one league
+        leagues = { only_league: leagues[only_league] }
+
     def show_teams(event, feature, **kwargs): 
         statefp = feature["properties"]["STATEFP"]
         countyfp = feature["properties"]["COUNTYFP"]

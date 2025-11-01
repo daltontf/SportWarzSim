@@ -3,6 +3,12 @@ This is an attempt to apply a mathematical model to US counties to predict the l
 - https://www.nytimes.com/interactive/2014/04/24/upshot/facebook-baseball-map.html
 
 
+#### MLB and NHL Heat Maps
+
+![MLB Heat Map]("./MLBHeatMap.png" "MLB Heat Map")
+
+![NHL Heat Map]("./NHLHeatMap.png" "NHL Heat Map")
+
 #### Things taken into account:
 - Popularity of the league / sport (league_weight)
 

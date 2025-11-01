@@ -1,6 +1,6 @@
 {
 "league_name": "National Football League", 
-"weight": 1.0,
+"weight": 0.9,
 "teams": [
   {"name":"Arizona Cardinals","venue":"State Farm Stadium","L":4.0,"S":0.0,"coordinates":{"lat":33.52728,"lon":-112.26328},"color":"#97233F","state":"Arizona"},
   {"name":"Atlanta Falcons","venue":"Mercedes-Benz Stadium","L":6.0,"S":0.0,"coordinates":{"lat":33.75549,"lon":-84.40199},"color":"#A71930","state":"Georgia"},
@@ -19,7 +19,7 @@
   {"name":"Jacksonville Jaguars","venue":"EverBank Stadium","L":4.0,"S":0.0,"coordinates":{"lat":30.32479,"lon":-81.63786},"color":"#006778","state":"Florida"},
   {"name":"Kansas City Chiefs","venue":"Arrowhead Stadium","L":7.0,"S":2.0,"coordinates":{"lat":39.04879,"lon":-94.48457},"color":"#E31837","state":"Missouri"},
   {"name":"Las Vegas Raiders","venue":"Allegiant Stadium","L":3.0,"S":2.0,"coordinates":{"lat":36.09079,"lon":-115.18395},"color":"#000000","state":"California"},
-  {"name":"Los Angeles Chargers","venue":"SoFi Stadium","L":2.0,"S":1.0,"coordinates":{"lat":33.95359,"lon":-118.33963},"color":"#0080C6","state":"California"},
+  {"name":"Los Angeles Chargers","venue":"SoFi Stadium","L":2.0,"S":0.0,"coordinates":{"lat":33.95359,"lon":-118.33963},"color":"#0080C6","state":"California"},
   {"name":"Los Angeles Rams","venue":"SoFi Stadium","L":6.0,"S":0.0,"coordinates":{"lat":33.95359,"lon":-118.33963},"color":"#003594","state":"California"},
   {"name":"Miami Dolphins","venue":"Hard Rock Stadium","L":7.0,"S":0.0,"coordinates":{"lat":25.95796,"lon":-80.23931},"color":"#008E97","state":"Florida"},
   {"name":"Minnesota Vikings","venue":"U.S. Bank Stadium","L":6.0,"S":0.0,"coordinates":{"lat":44.97377,"lon":-93.25874},"color":"#4F2683","state":"Minnesota"},
