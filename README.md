@@ -5,9 +5,9 @@ This is an attempt to apply a mathematical model to US counties to predict the l
 
 #### MLB and NHL Heat Maps
 
-![MLB Heat Map]("./MLBHeatMap.png" "MLB Heat Map")
+![MLB Heat Map](./MLBHeatMap.png)
 
-![NHL Heat Map]("./NHLHeatMap.png" "NHL Heat Map")
+![NHL Heat Map](./NHLHeatMap.png)
 
 #### Things taken into account:
 - Popularity of the league / sport (league_weight)
