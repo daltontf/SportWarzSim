@@ -14,11 +14,13 @@ This is an attempt to apply a mathematical model to US counties to predict the l
 
 - Long-term establishment of the team. This could called allegiance, equity, etc. In in the code referred as "L"
     - Teams gain this by over time:
+    
         - Simply existing and accelerated or slowed by having positive/zero or negative short-term enthusiasm.        
 
 - Short-term enthusiasm. In in the code referred as "S"
 
-    - Expansion and Relocated teams. 
+    - Expansion and Relocated teams.
+
     - Team is performing well though highly established teams will not be as enthused as this is expected of them. 
     
     - Team has phenom or marque player
