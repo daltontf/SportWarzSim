@@ -137,20 +137,20 @@ def compute_shares(leagues, co_data_frame):
                     effective_d *= not_same_state_multiplier    
                 if effective_d < nearest_effective_d:
                     nearest_effective_d = effective_d 
-                team_distance_decay = distance_decay_numerator / t["L"]     
+                team_distance_decay = distance_decay_numerator / t["L"]**1.25    
                 D = np.exp(-team_distance_decay * effective_d) 
                 DS = np.exp(-team_distance_decay * effective_d * 2)  #short term enthusiasm dissipates faster             
                 R[j] = ((league_weight * 10) + t["L"]  * D)  + ((league_weight * 10) + t["S"] * DS)   
 
             expR[i] = np.exp(R / competition_temperature)
-            raw_shares =  expR[i] / expR[i].sum(keepdims=True)
-            
+                        
             # if a given team has less than 1/#num team share then the share is given to non-fan(for now)
+            raw_shares =  expR[i] / expR[i].sum(keepdims=True)
             accum = 0
             for j in range(len(raw_shares)):
                 if raw_shares[j] < 1 / len(leagues[league]["teams"]):
-                    accum += expR[i,j]
-                    expR[i,j] = 0
+                     accum += expR[i,j]
+                     expR[i,j] = 0
     
             expR[i, -1] = accum / league_weight
 
@@ -288,12 +288,27 @@ def league_teams_sums(league_data):
     league_dfs = league_data["dataframes"]
     return league_dfs[['team_name', 'share_population']].groupby('team_name').sum().sort_values(by='share_population',ascending=False)
 
-def simulate_expansion(co_data_frame, league_name, new_teams):
+def add_team(co_data_frame, league_name, new_teams):
     #Don't mutate exisiing data
     leagues_singular = { league_name: { }}
     load_leagues(leagues_singular)
        
     leagues_singular[league_name]["json"]["teams"].extend(new_teams)
+
+    calculate_distances(leagues_singular, co_data_frame) 
+    compute_shares(leagues_singular, co_data_frame)  
+    compute_output_dataframes(leagues_singular, co_data_frame)    
+    return leagues_singular
+
+def replace_team(co_data_frame, league_name, team_name, new_team):
+    #Don't mutate exisiing data
+    leagues_singular = { league_name: { }}
+    load_leagues(leagues_singular)
+
+    teams = leagues_singular[league_name]["json"]["teams"]
+    teams = list(filter(lambda x: x["name"] != team_name, teams))
+    teams.append(new_team)
+    leagues_singular[league_name]["json"]["teams"] = teams
 
     calculate_distances(leagues_singular, co_data_frame) 
     compute_shares(leagues_singular, co_data_frame)  
