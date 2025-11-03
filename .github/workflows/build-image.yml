@@ -18,7 +18,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t sportwarzsim:latest .
+          docker build -f docker/Dockerfile -t sportwarzsim:latest .
 
       - name: Save Docker image as tar
         run: |
