@@ -103,7 +103,7 @@ def opacity_for_population(population):
 
 def compute_shares(leagues, co_data_frame):
     distance_decay_numerator = .01 
-    competition_temperature = 1.5 # Lower -> winner takes it
+    competition_temperature_base = 1 # Lower -> winner takes it
     not_nearest_multiplier = 3.0 # added to distance multiplied (d - nearest_d) 
     not_same_state_multiplier = 3 # TODO might need bigger multiplier if different country, eh
     nearest_key = "nearest"
@@ -137,11 +137,12 @@ def compute_shares(leagues, co_data_frame):
                     effective_d *= not_same_state_multiplier    
                 if effective_d < nearest_effective_d:
                     nearest_effective_d = effective_d 
-                team_distance_decay = distance_decay_numerator / t["L"]**1.25    
+                team_distance_decay = distance_decay_numerator / t["L"]  
                 D = np.exp(-team_distance_decay * effective_d) 
                 DS = np.exp(-team_distance_decay * effective_d * 2)  #short term enthusiasm dissipates faster             
                 R[j] = ((league_weight * 10) + t["L"]  * D)  + ((league_weight * 10) + t["S"] * DS)   
 
+            competition_temperature = np.log10((5 + d.min()) / 5) + competition_temperature_base
             expR[i] = np.exp(R / competition_temperature)
                         
             # if a given team has less than 1/#num team share then the share is given to non-fan(for now)
@@ -152,7 +153,7 @@ def compute_shares(leagues, co_data_frame):
                      accum += expR[i,j]
                      expR[i,j] = 0
     
-            expR[i, -1] = accum / league_weight
+            expR[i, -1] =  accum * (1 + (1 - league_weight))
 
         leagues[league]["shares"] =  expR / expR.sum(axis=1, keepdims=True)        
 
@@ -186,7 +187,7 @@ def reset_county_styles(counties_geojson):
         "color": "grey",
         "weight": 1,
         "fillColor": "grey",
-        "fillOpacity": 0.1,
+        "fillOpacity": 0.0,
     }
 
     for feature in counties_geojson["features"]:
@@ -286,7 +287,11 @@ def render_map(leagues, only_league, counties_geojson, co_data_frame):
 
 def league_teams_sums(league_data):
     league_dfs = league_data["dataframes"]
-    return league_dfs[['team_name', 'share_population']].groupby('team_name').sum().sort_values(by='share_population',ascending=False)
+    return league_dfs[['team_name', 'share_population']]\
+        [league_dfs["share_population"] > 1000]\
+        .groupby('team_name')\
+        .sum()\
+        .sort_values(by='share_population',ascending=False)
 
 def add_team(co_data_frame, league_name, new_teams):
     #Don't mutate exisiing data
@@ -300,17 +305,14 @@ def add_team(co_data_frame, league_name, new_teams):
     compute_output_dataframes(leagues_singular, co_data_frame)    
     return leagues_singular
 
-def replace_team(co_data_frame, league_name, team_name, new_team):
-    #Don't mutate exisiing data
+def update_team(co_data_frame, league_name, team_name, attrs):
     leagues_singular = { league_name: { }}
     load_leagues(leagues_singular)
 
-    teams = leagues_singular[league_name]["json"]["teams"]
-    teams = list(filter(lambda x: x["name"] != team_name, teams))
-    teams.append(new_team)
-    leagues_singular[league_name]["json"]["teams"] = teams
-
+    for i, team in enumerate(leagues_singular[league_name]["json"]["teams"]):
+        if team["name"] == team_name:
+            leagues_singular[league_name]["json"]["teams"][i] = team | attrs
     calculate_distances(leagues_singular, co_data_frame) 
     compute_shares(leagues_singular, co_data_frame)  
-    compute_output_dataframes(leagues_singular, co_data_frame)    
+    compute_output_dataframes(leagues_singular, co_data_frame)  
     return leagues_singular
