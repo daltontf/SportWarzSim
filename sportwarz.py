@@ -102,16 +102,17 @@ def opacity_for_population(population):
     return 0.1
 
 def compute_shares(leagues, co_data_frame):
-    distance_decay_numerator = .01 
+    distance_decay_numerator = .02 
     competition_temperature_base = 1 # Lower -> winner takes it
     not_nearest_multiplier = 3.0 # added to distance multiplied (d - nearest_d) 
-    not_same_state_multiplier = 3 # TODO might need bigger multiplier if different country, eh
+    not_same_state_multiplier = 2
+    canada_multiplier = 2 
     nearest_key = "nearest"
     
     for league in leagues.keys(): 
         d = leagues[league]["distances"] 
 
-        expR = np.zeros((len(d), len(d[0]) + 1), dtype=float)
+        shares = np.zeros_like(d)
         league_weight = leagues[league]['json']["weight"]
         co_data_frame[nearest_key] = float('nan')
         for j, t in leagues[league]["teams"].iterrows():
@@ -124,7 +125,7 @@ def compute_shares(leagues, co_data_frame):
             nearest_d = c[nearest_key]
             nearest_effective_d = 1000000
             county_state = c["STNAME"]
-            R = np.zeros_like(expR[i])
+            R = np.zeros_like(d[i])
             for j, t in leagues[league]["teams"].iterrows():
                 effective_d = d[i,j]
                 if not pd.isna(nearest_d) and effective_d > nearest_d:
@@ -134,7 +135,9 @@ def compute_shares(leagues, co_data_frame):
                     if not county_state in team_state:
                         effective_d *= not_same_state_multiplier 
                 elif county_state != team_state:
-                    effective_d *= not_same_state_multiplier    
+                    effective_d *= not_same_state_multiplier
+                    if "eh" in t:
+                        effective_d *= canada_multiplier     
                 if effective_d < nearest_effective_d:
                     nearest_effective_d = effective_d 
                 team_distance_decay = distance_decay_numerator / t["L"]  
@@ -143,19 +146,17 @@ def compute_shares(leagues, co_data_frame):
                 R[j] = ((league_weight * 10) + t["L"]  * D)  + ((league_weight * 10) + t["S"] * DS)   
 
             competition_temperature = np.log10((5 + d.min()) / 5) + competition_temperature_base
-            expR[i] = np.exp(R / competition_temperature)
-                        
-            # if a given team has less than 1/#num team share then the share is given to non-fan(for now)
-            raw_shares =  expR[i] / expR[i].sum(keepdims=True)
-            accum = 0
-            for j in range(len(raw_shares)):
-                if raw_shares[j] < 1 / len(leagues[league]["teams"]):
-                     accum += expR[i,j]
-                     expR[i,j] = 0
-    
-            expR[i, -1] =  accum * (1 + (1 - league_weight))
+            expR = np.exp(R / competition_temperature)
+          
+            raw_shares =  expR / expR.sum(keepdims=True)
 
-        leagues[league]["shares"] =  expR / expR.sum(axis=1, keepdims=True)        
+            min_share = raw_shares.min() + (.01 * raw_shares.max())
+            for j in range(len(raw_shares)):
+                raw_shares[j] = max(0, raw_shares[j] - min_share)
+
+            shares[i] = raw_shares
+
+        leagues[league]["shares"] = shares     
 
 def compute_output_dataframes(leagues, co_data_frame):
     for league in leagues.keys(): 
@@ -168,8 +169,8 @@ def compute_output_dataframes(leagues, co_data_frame):
             for j, t in leagues[league]["teams"].iterrows():
                 share = shares[i,j]
                 share_population = c["POPESTIMATE2020"] * share
-                if share > 0.001: # or share_population > 1000: # algoritm assumes everyone is a fan of some team in then
-                    dataframe_out.append({
+                #if share > 0.001: # or share_population > 1000: # algoritm assumes everyone is a fan of some team in then
+                dataframe_out.append({
                         "county": c["CTYNAME"],
                         "countyfp": c["COUNTY"],
                         "state": c["STNAME"],
@@ -240,7 +241,7 @@ def render_map(leagues, only_league, counties_geojson, co_data_frame):
 
             all_county_rows = all_county_rows.sort_values(by="share", ascending=False)
             for i, county_row in all_county_rows.iterrows():
-                if county_row["share"] > 0.03:
+                if county_row["share"] > 0.01:
                     leagues_table += (
                         "<tr>"  
                         f"<td>{county_row['league']}</td>" 

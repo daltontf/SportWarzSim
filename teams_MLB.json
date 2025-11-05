@@ -31,7 +31,7 @@
   {"name":"St. Louis Cardinals","venue":"Busch Stadium","L":9.0,"S":-1.0,"coordinates":{"lat":38.626004,"lon":-90.188538},"color":"#C41E3A","state":"Missouri"},
   {"name":"Tampa Bay Rays","venue":"Tropicana Field","L":6.0,"S":-1.0,"coordinates":{"lat":27.768284,"lon":-82.653961},"color":"#092C5C","state":"Florida"},
   {"name":"Texas Rangers","venue":"Globe Life Field","L":6.5,"S":0.5,"coordinates":{"lat":32.751333,"lon":-97.082778},"color":"#003278","state":"Texas"},
-  {"name":"Toronto Blue Jays","venue":"Rogers Centre","L":6.5,"S":2.0,"coordinates":{"lat":43.641444,"lon":-79.389417},"color":"#134A8E","state":"Ontario"},
+  {"name":"Toronto Blue Jays","venue":"Rogers Centre","L":6.5,"S":2.0,"coordinates":{"lat":43.641444,"lon":-79.389417},"color":"#134A8E","state":"Ontario","eh":"Y"},
   {"name":"Washington Nationals","venue":"Nationals Park","L":6.0,"S":0.0,"coordinates":{"lat":38.873055,"lon":-77.007996},"color":"#AB0003","state":"District of Columbia"}
 ]
 }

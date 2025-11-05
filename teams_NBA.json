@@ -30,7 +30,7 @@
   {"name":"Portland Trail Blazers","venue":"Moda Center","L":5.0,"S":0.0,"coordinates":{"lat":45.531111,"lon":-122.666667},"color":"#E03A3E","state":"Oregon"},
   {"name":"Sacramento Kings","venue":"Golden 1 Center","L":5.0,"S":0.0,"coordinates":{"lat":38.580672,"lon":-121.499001},"color":"#5A2D81","state":"California"},
   {"name":"San Antonio Spurs","venue":"Frost Bank Center","L":7.0,"S":0.0,"coordinates":{"lat":29.426944,"lon":-98.486111},"color":"black","state":"Texas"},
-  {"name":"Toronto Raptors","venue":"Scotiabank Arena","L":5.0,"S":0.0,"coordinates":{"lat":43.643333,"lon":-79.379167},"color":"#CE1141","state":"Ontario"},
+  {"name":"Toronto Raptors","venue":"Scotiabank Arena","L":5.0,"S":0.0,"coordinates":{"lat":43.643333,"lon":-79.379167},"color":"#CE1141","state":"Ontario","eh":"Y"},
   {"name":"Utah Jazz","venue":"Delta Center","L":5.0,"S":0.0,"coordinates":{"lat":40.768889,"lon":-111.901111},"color":"#002B5C","state":"Utah"},
   {"name":"Washington Wizards","venue":"Capital One Arena","L":5.0,"S":0.0,"coordinates":{"lat":38.898056,"lon":-77.020833},"color":"#002B5C","state":"District of Columbia"}
 ]
