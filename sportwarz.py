@@ -102,18 +102,18 @@ def opacity_for_population(population):
     return 0.1
 
 def compute_shares(leagues, co_data_frame):
-    distance_decay_numerator = .02 
     competition_temperature_base = 1 # Lower -> winner takes it
-    not_nearest_multiplier = 3.0 # added to distance multiplied (d - nearest_d) 
-    not_same_state_multiplier = 2
+    not_nearest_multiplier = 2.5 # added to distance multiplied (d - nearest_d) 
+    not_same_state_multiplier = 2.5
     canada_multiplier = 2 
     nearest_key = "nearest"
     
     for league in leagues.keys(): 
         d = leagues[league]["distances"] 
+        league_weight = leagues[league]['json']["weight"]
+        distance_decay_numerator = .01 / league_weight 
 
         shares = np.zeros_like(d)
-        league_weight = leagues[league]['json']["weight"]
         co_data_frame[nearest_key] = float('nan')
         for j, t in leagues[league]["teams"].iterrows():
             for i, c in co_data_frame.iterrows():    
@@ -150,9 +150,10 @@ def compute_shares(leagues, co_data_frame):
           
             raw_shares =  expR / expR.sum(keepdims=True)
 
-            min_share = raw_shares.min() + (.01 * raw_shares.max())
-            for j in range(len(raw_shares)):
-                raw_shares[j] = max(0, raw_shares[j] - min_share)
+            # Another attempt at simulating "non-fandom"
+            # min_share = raw_shares.min() + (.01 * raw_shares.max())
+            # for j in range(len(raw_shares)):
+            #     raw_shares[j] = max(0, raw_shares[j] - min_share)
 
             shares[i] = raw_shares
 
@@ -241,7 +242,7 @@ def render_map(leagues, only_league, counties_geojson, co_data_frame):
 
             all_county_rows = all_county_rows.sort_values(by="share", ascending=False)
             for i, county_row in all_county_rows.iterrows():
-                if county_row["share"] > 0.01:
+                if county_row["share"] > 1/len(leagues[league]["json"]["teams"]):
                     leagues_table += (
                         "<tr>"  
                         f"<td>{county_row['league']}</td>" 
@@ -288,8 +289,9 @@ def render_map(leagues, only_league, counties_geojson, co_data_frame):
 
 def league_teams_sums(league_data):
     league_dfs = league_data["dataframes"]
-    return league_dfs[['team_name', 'share_population']]\
-        [league_dfs["share_population"] > 1000]\
+    num_teams = len(league_data["json"]["teams"])
+    return league_dfs[league_dfs["share"].apply(lambda x: x > 1/num_teams)]\
+        [['team_name', 'share_population']]\
         .groupby('team_name')\
         .sum()\
         .sort_values(by='share_population',ascending=False)
