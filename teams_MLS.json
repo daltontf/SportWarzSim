@@ -36,7 +36,7 @@
         "lon": -73.5775
       },
       "color": "#00215B",
-      "state": "Quebec"
+      "state": "Quebec","eh":"Y"
     },
     {
       "name": "Charlotte FC",
@@ -318,7 +318,7 @@
       "name": "St. Louis City SC",
       "venue": "Energizer Park",
       "L": 1.5,
-      "S": 2.0,
+      "S": 3.0,
       "coordinates": {
         "lat": 38.631340,
         "lon": -90.210594
@@ -336,7 +336,7 @@
         "lon": -79.3895
       },
       "color": "#D21F27",
-      "state": "Ontario"
+      "state": "Ontario","eh":"Y"
     },
     {
       "name": "Vancouver Whitecaps FC",
@@ -348,7 +348,7 @@
         "lon": -123.1159
       },
       "color": "#006AB3",
-      "state": "British Columbia"
+      "state": "British Columbia","eh":"Y"
     },
     {
       "name": "Seattle Sounders FC",

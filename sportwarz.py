@@ -102,17 +102,18 @@ def opacity_for_population(population):
     return 0.1
 
 def compute_shares(leagues, co_data_frame):
-    distance_decay_numerator = .01 
-    competition_temperature = 1.5 # Lower -> winner takes it
-    not_nearest_multiplier = 3.0 # added to distance multiplied (d - nearest_d) 
-    not_same_state_multiplier = 3 # TODO might need bigger multiplier if different country, eh
+    competition_temperature_base = 1 # Lower -> winner takes it
+    not_nearest_multiplier = 2.5 # added to distance multiplied (d - nearest_d) 
+    not_same_state_multiplier = 2.5
+    canada_multiplier = 2 
     nearest_key = "nearest"
     
     for league in leagues.keys(): 
         d = leagues[league]["distances"] 
-
-        expR = np.zeros((len(d), len(d[0]) + 1), dtype=float)
         league_weight = leagues[league]['json']["weight"]
+        distance_decay_numerator = .01 / league_weight 
+
+        shares = np.zeros_like(d)
         co_data_frame[nearest_key] = float('nan')
         for j, t in leagues[league]["teams"].iterrows():
             for i, c in co_data_frame.iterrows():    
@@ -124,7 +125,7 @@ def compute_shares(leagues, co_data_frame):
             nearest_d = c[nearest_key]
             nearest_effective_d = 1000000
             county_state = c["STNAME"]
-            R = np.zeros_like(expR[i])
+            R = np.zeros_like(d[i])
             for j, t in leagues[league]["teams"].iterrows():
                 effective_d = d[i,j]
                 if not pd.isna(nearest_d) and effective_d > nearest_d:
@@ -134,27 +135,29 @@ def compute_shares(leagues, co_data_frame):
                     if not county_state in team_state:
                         effective_d *= not_same_state_multiplier 
                 elif county_state != team_state:
-                    effective_d *= not_same_state_multiplier    
+                    effective_d *= not_same_state_multiplier
+                    if "eh" in t:
+                        effective_d *= canada_multiplier     
                 if effective_d < nearest_effective_d:
                     nearest_effective_d = effective_d 
-                team_distance_decay = distance_decay_numerator / t["L"]**1.25    
+                team_distance_decay = distance_decay_numerator / t["L"]  
                 D = np.exp(-team_distance_decay * effective_d) 
                 DS = np.exp(-team_distance_decay * effective_d * 2)  #short term enthusiasm dissipates faster             
                 R[j] = ((league_weight * 10) + t["L"]  * D)  + ((league_weight * 10) + t["S"] * DS)   
 
-            expR[i] = np.exp(R / competition_temperature)
-                        
-            # if a given team has less than 1/#num team share then the share is given to non-fan(for now)
-            raw_shares =  expR[i] / expR[i].sum(keepdims=True)
-            accum = 0
-            for j in range(len(raw_shares)):
-                if raw_shares[j] < 1 / len(leagues[league]["teams"]):
-                     accum += expR[i,j]
-                     expR[i,j] = 0
-    
-            expR[i, -1] = accum / league_weight
+            competition_temperature = np.log10((5 + d.min()) / 5) + competition_temperature_base
+            expR = np.exp(R / competition_temperature)
+          
+            raw_shares =  expR / expR.sum(keepdims=True)
 
-        leagues[league]["shares"] =  expR / expR.sum(axis=1, keepdims=True)        
+            # Another attempt at simulating "non-fandom"
+            # min_share = raw_shares.min() + (.01 * raw_shares.max())
+            # for j in range(len(raw_shares)):
+            #     raw_shares[j] = max(0, raw_shares[j] - min_share)
+
+            shares[i] = raw_shares
+
+        leagues[league]["shares"] = shares     
 
 def compute_output_dataframes(leagues, co_data_frame):
     for league in leagues.keys(): 
@@ -167,8 +170,8 @@ def compute_output_dataframes(leagues, co_data_frame):
             for j, t in leagues[league]["teams"].iterrows():
                 share = shares[i,j]
                 share_population = c["POPESTIMATE2020"] * share
-                if share > 0.001: # or share_population > 1000: # algoritm assumes everyone is a fan of some team in then
-                    dataframe_out.append({
+                #if share > 0.001: # or share_population > 1000: # algoritm assumes everyone is a fan of some team in then
+                dataframe_out.append({
                         "county": c["CTYNAME"],
                         "countyfp": c["COUNTY"],
                         "state": c["STNAME"],
@@ -186,7 +189,7 @@ def reset_county_styles(counties_geojson):
         "color": "grey",
         "weight": 1,
         "fillColor": "grey",
-        "fillOpacity": 0.1,
+        "fillOpacity": 0.0,
     }
 
     for feature in counties_geojson["features"]:
@@ -239,7 +242,7 @@ def render_map(leagues, only_league, counties_geojson, co_data_frame):
 
             all_county_rows = all_county_rows.sort_values(by="share", ascending=False)
             for i, county_row in all_county_rows.iterrows():
-                if county_row["share"] > 0.03:
+                if county_row["share"] > 1/len(leagues[league]["json"]["teams"]):
                     leagues_table += (
                         "<tr>"  
                         f"<td>{county_row['league']}</td>" 
@@ -286,7 +289,12 @@ def render_map(leagues, only_league, counties_geojson, co_data_frame):
 
 def league_teams_sums(league_data):
     league_dfs = league_data["dataframes"]
-    return league_dfs[['team_name', 'share_population']].groupby('team_name').sum().sort_values(by='share_population',ascending=False)
+    num_teams = len(league_data["json"]["teams"])
+    return league_dfs[league_dfs["share"].apply(lambda x: x > 1/num_teams)]\
+        [['team_name', 'share_population']]\
+        .groupby('team_name')\
+        .sum()\
+        .sort_values(by='share_population',ascending=False)
 
 def add_team(co_data_frame, league_name, new_teams):
     #Don't mutate exisiing data
@@ -300,17 +308,14 @@ def add_team(co_data_frame, league_name, new_teams):
     compute_output_dataframes(leagues_singular, co_data_frame)    
     return leagues_singular
 
-def replace_team(co_data_frame, league_name, team_name, new_team):
-    #Don't mutate exisiing data
+def update_team(co_data_frame, league_name, team_name, attrs):
     leagues_singular = { league_name: { }}
     load_leagues(leagues_singular)
 
-    teams = leagues_singular[league_name]["json"]["teams"]
-    teams = list(filter(lambda x: x["name"] != team_name, teams))
-    teams.append(new_team)
-    leagues_singular[league_name]["json"]["teams"] = teams
-
+    for i, team in enumerate(leagues_singular[league_name]["json"]["teams"]):
+        if team["name"] == team_name:
+            leagues_singular[league_name]["json"]["teams"][i] = team | attrs
     calculate_distances(leagues_singular, co_data_frame) 
     compute_shares(leagues_singular, co_data_frame)  
-    compute_output_dataframes(leagues_singular, co_data_frame)    
+    compute_output_dataframes(leagues_singular, co_data_frame)  
     return leagues_singular
