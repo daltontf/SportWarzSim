@@ -17,7 +17,7 @@
   {"name":"Houston Texans","venue":"NRG Stadium","L":6.5,"S":0.0,"coordinates":{"lat":29.68486,"lon":-95.41167},"color":"#03202F","state":"Texas"},
   {"name":"Indianapolis Colts","venue":"Lucas Oil Stadium","L":6.0,"S":0.0,"coordinates":{"lat":39.76006,"lon":-86.16381},"color":"#002C5F","state":"Indiana"},
   {"name":"Jacksonville Jaguars","venue":"EverBank Stadium","L":6.0,"S":0.0,"coordinates":{"lat":30.32479,"lon":-81.63786},"color":"#006778","state":"Florida"},
-  {"name":"Kansas City Chiefs","venue":"Arrowhead Stadium","L":7.0,"S":2.0,"coordinates":{"lat":39.04879,"lon":-94.48457},"color":"#E31837","state":"Missouri"},
+  {"name":"Kansas City Chiefs","venue":"Arrowhead Stadium","L":7.0,"S":2.0,"coordinates":{"lat":39.04879,"lon":-94.48457},"color":"#E31837","state":["Missouri","Kansas"]},
   {"name":"Las Vegas Raiders","venue":"Allegiant Stadium","L":5.0,"S":1.0,"coordinates":{"lat":36.09079,"lon":-115.18395},"color":"#000000","state":"California"},
   {"name":"Los Angeles Chargers","venue":"SoFi Stadium","L":5.0,"S":0.0,"coordinates":{"lat":33.95359,"lon":-118.33963},"color":"#0080C6","state":"California"},
   {"name":"Los Angeles Rams","venue":"SoFi Stadium","L":6.0,"S":0.0,"coordinates":{"lat":33.95359,"lon":-118.33963},"color":"#003594","state":"California"},
