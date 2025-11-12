@@ -113,6 +113,7 @@
     {
       "name": "Inter Miami CF",
       "venue": "Chase Stadium",
+      "N": 8.5,
       "L": 2.0,
       "S": 4.0,
       "coordinates": {
@@ -151,6 +152,7 @@
       "venue": "Dignity Health Sports Park",
       "L": 4.0,
       "S": -1.0,
+      "N": 7.5,
       "coordinates": {
         "lat": 33.8642,
         "lon": -118.2610
@@ -161,6 +163,7 @@
     {
       "name": "Los Angeles FC",
       "venue": "BMO Stadium",
+      "N": 7.5,
       "L": 3.0,
       "S": 2.0,
       "coordinates": {
