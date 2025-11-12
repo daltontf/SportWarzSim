@@ -27,6 +27,8 @@ class LeagueJson(TypedDict):
     teams: list[Team]
 
 class League(TypedDict):
+    league_name: str
+    weight: float
     json: LeagueJson
     dataframe: pd.DataFrame
     distances: np.ndarray
@@ -314,26 +316,29 @@ def league_teams_sums(league_data: League):
         .sum()\
         .sort_values(by='share_population',ascending=False)
 
-def add_team(co_data_frame: pd.DataFrame, league_name: str, new_teams: list[str]):
-    #Don't mutate exisiing data
-    leagues_singular = { league_name: { }}
-    load_leagues(leagues_singular)
-       
-    leagues_singular[league_name]["json"]["teams"].extend(new_teams)
+def add_team(co_data_frame: pd.DataFrame, leagues: Leagues, league_name: str, new_teams: list[str]):
+    leagues[league_name]["json"]["teams"].extend(new_teams)
 
-    calculate_distances(leagues_singular, co_data_frame) 
-    compute_shares(leagues_singular, co_data_frame)  
-    compute_output_dataframes(leagues_singular, co_data_frame)    
-    return leagues_singular
+    calculate_distances(leagues, co_data_frame) 
+    compute_shares(leagues, co_data_frame)  
+    compute_output_dataframes(leagues, co_data_frame)    
+    return leagues
 
-def update_team(co_data_frame: pd.DataFrame, league_name: str, team_name: str, attrs: dict[str, object]):
-    leagues_singular = { league_name: { }}
-    load_leagues(leagues_singular)
-
-    for i, team in enumerate(leagues_singular[league_name]["json"]["teams"]):
+def update_team(co_data_frame: pd.DataFrame, leagues: Leagues, league_name: str, team_name: str, attrs: dict[str, object]):
+    for i, team in enumerate(leagues[league_name]["json"]["teams"]):
         if team["name"] == team_name:
-            leagues_singular[league_name]["json"]["teams"][i] = team | attrs
-    calculate_distances(leagues_singular, co_data_frame) 
-    compute_shares(leagues_singular, co_data_frame)  
-    compute_output_dataframes(leagues_singular, co_data_frame)  
-    return leagues_singular
+            leagues[league_name]["json"]["teams"][i] = team | attrs
+    calculate_distances(leagues, co_data_frame) 
+    compute_shares(leagues, co_data_frame)  
+    compute_output_dataframes(leagues, co_data_frame)  
+    return leagues
+
+def copy_with_just_league(leagues:Leagues, league_name: str):
+    return { 
+        league_name: {           
+            "json": {
+                "weight": leagues[league_name]["json"]["weight"],
+                "teams":  leagues[league_name]["json"]["teams"].copy()
+            }
+        }
+    }
