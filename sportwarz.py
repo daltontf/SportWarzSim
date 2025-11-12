@@ -159,7 +159,7 @@ def compute_shares(leagues: Leagues, co_data_frame: pd.DataFrame):
                 if effective_d < nearest_effective_d:
                     nearest_effective_d = effective_d 
                 team_distance_decay = league_distance_decay * (5/N)
-                D = np.exp(-team_distance_decay * effective_d) 
+                D = np.exp(-team_distance_decay * min(effective_d, 15000/N))
                 DS = np.exp(-team_distance_decay * effective_d * 2)  #short term enthusiasm dissipates faster             
                 R[j] = ((league_weight * 10) + t["L"]  * D)  + ((league_weight * 10) + t["S"] * DS)   
 
