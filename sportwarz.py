@@ -284,7 +284,7 @@ def render_map(leagues: Leagues, only_league: str, counties_geojson:CountiesGEOJ
     display(widgets.HTML(
         """
         <style>
-        .leaflet-popup-content-wrapper {
+        .leaflet-popup-content-wrapper .leaflet-popup-tip {
             background-color: black;
             border: 2px solid black;
         }
