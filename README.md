@@ -12,6 +12,8 @@ This is an attempt to apply a mathematical model to US counties to predict the l
 
 The above all use Twitter followers for the counts and many counties do have a rather small sample size.
 
+This model for the most part measures potential fans. The only time fans are dropped as being non-fans at this point is if the percentage that supports a team in a county drops below the percentage that of the fans support 
+
 #### Examples of MLB and NHL Heat Maps
 
 ![MLB Heat Map](./MLBHeatMap.png)
@@ -60,24 +62,21 @@ The code does none of the "L", "S" or "N" accumlation over time. The current val
     
     - Maybe reduced by period where other team in market have higher "S". Example would be St. Louis football Cardinals in 1980s when the long established baseball Cardinals played in three World Series'. Inability to build "L" when in theory a football team should be "top dog" (higher league_weight) in the market led to the teams relocation to Phoenix.
     
-    - New venue that over time helps build "L"
+    - New venue that over time adds to "S" and which helps build "L"
 
 - "N":
 
     - Larger markets teams with big name rosters will have higher value here. 
 
-    - Teams with good reputations from the days a given league was smaller     
+    - Teams with good reputations from the days past like the Dallas Cowboys.
 
-#### "Fun" I'd like to be able to do
+#### "Fun" aspects I'd like to be able to do
 
 - Model expansion and relocation to see if fans are gained and how existing fan bases might shift
 
     - Even silly things like major city in Delaware getting teams like the Metropolis Meteors.
 
 - Model what might happen if a league implemented some kind of pro/rel scheme. Enthusiasm for such team would go negative and long term allegiance would to start tp lower if promotion is earned back quickly.
-
-
-#### Thing I am trying to add.
 
 - Residual loyalty to a relocated team like the Raiders in LA.
 
@@ -86,8 +85,6 @@ The code does none of the "L", "S" or "N" accumlation over time. The current val
     - The model might favor Cardinals and Royals over Cubs in Iowa. However, the Cubs have AAA in Des Moines and seem favored in the state.
 
 Experimenting with having a "virtual" team in location with same name as parent club or former club to represent both above
-
-#### Things I'd like to add.
 
 - ~~"America's Teams": The NY Times maps shows Yankees, Red Sox, Lakers, Heat fandom in remote places. Perhaps there should be a bottom to a teams distance degradation.~~ This is accomplished using the "N" value.
 

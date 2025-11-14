@@ -11,6 +11,7 @@ RUN pip install numpy
 RUN pip install shapely
 RUN pip install ipywidgets
 RUN pip install ipyleaflet
+RUN pip install voila
 
 # Make port 8888 available to the world outside this container
 EXPOSE 8866
@@ -26,4 +27,4 @@ COPY ./*.json /app
 COPY ./*.py /app
 
 # Run Voila when the container launches
-CMD ["voila", "notebook", "--theme=dark"]
+CMD ["voila", "--theme=dark", "--no-browser", "--Voila.ip=0.0.0.0"]
