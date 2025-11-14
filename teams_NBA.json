@@ -18,7 +18,7 @@
   {"name":"Los Angeles Clippers","venue":"Intuit Dome","L":4.0,"S":0.0,"coordinates":{"lat":33.958111,"lon":-118.341667},"color":"#C8102E","state":"California"},
   {"name":"Los Angeles Lakers","venue":"Crypto.com Arena","N":8.5,"L":9.0,"S":0.0,"coordinates":{"lat":34.043017,"lon":-118.267254},"color":"#552583","state":"California"},
   {"name":"Memphis Grizzlies","venue":"FedExForum","L":4.0,"S":0.0,"coordinates":{"lat":35.138214,"lon":-90.050103},"color":"#5D76A9","state":"Tennessee"},
-  {"name":"Miami Heat","venue":"Kaseya Center","N":7.0,"L":7.0,"S":0.0,"coordinates":{"lat":25.781389,"lon":-80.188056},"color":"#98002E","state":"Florida"},
+  {"name":"Miami Heat","venue":"Kaseya Center","N":7.5,"L":7.0,"S":0.0,"coordinates":{"lat":25.781389,"lon":-80.188056},"color":"#98002E","state":"Florida"},
   {"name":"Milwaukee Bucks","venue":"Fiserv Forum","L":5.0,"S":0.0,"coordinates":{"lat":43.043611,"lon":-87.916944},"color":"#00471B","state":"Wisconsin"},
   {"name":"Minnesota Timberwolves","venue":"Target Center","L":5.0,"S":0.0,"coordinates":{"lat":44.979722,"lon":-93.276111},"color":"#0C2340","state":"Minnesota"},
   {"name":"New Orleans Pelicans","venue":"Smoothie King Center","L":5.0,"S":0.0,"coordinates":{"lat":29.949889,"lon":-90.081944},"color":"#0C2340","state":"Louisiana"},

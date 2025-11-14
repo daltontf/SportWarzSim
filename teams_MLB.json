@@ -4,10 +4,10 @@
 "teams": 
 [
   {"name":"Arizona Diamondbacks","venue":"Chase Field","L":6.0,"S":0.0,"coordinates":{"lat":33.445564,"lon":-112.067413},"color":"#A71930","state":"Arizona"},
-  {"name":"Atlanta Braves","venue":"Truist Park","N":8.5,"L":7.0,"S":0.0,"coordinates":{"lat":33.890781,"lon":-84.468239},"color":"navy","state":"Georgia"},
+  {"name":"Atlanta Braves","venue":"Truist Park","N":8.0,"L":7.0,"S":0.0,"coordinates":{"lat":33.890781,"lon":-84.468239},"color":"navy","state":"Georgia"},
   {"name":"Baltimore Orioles","venue":"Oriole Park at Camden Yards","L":7.0,"S":0.0,"coordinates":{"lat":39.284176,"lon":-76.622368},"color":"#FB4F14","state":"Maryland"},
-  {"name":"Boston Red Sox","venue":"Fenway Park","N":8.5,"L":9.7,"S":0.0,"coordinates":{"lat":42.346613,"lon":-71.098817},"color":"#BD3039","state":"Massachusetts"},
-  {"name":"Chicago Cubs","venue":"Wrigley Field","N":8.5,"L":9.0,"S":0.0,"coordinates":{"lat":41.947201,"lon":-87.656413},"color":"#0E3386","state":"Illinois"},
+  {"name":"Boston Red Sox","venue":"Fenway Park","N":8.5,"L":9.0,"S":0.0,"coordinates":{"lat":42.346613,"lon":-71.098817},"color":"#BD3039","state":"Massachusetts"},
+  {"name":"Chicago Cubs","venue":"Wrigley Field","N":8.0,"L":9.0,"S":0.0,"coordinates":{"lat":41.947201,"lon":-87.656413},"color":"#0E3386","state":"Illinois"},
   {"name":"Chicago White Sox","venue":"Guaranteed Rate Field","L":8.0,"S":0.0,"coordinates":{"lat":41.830883,"lon":-87.635083},"color":"#27251F","state":"Illinois"},
   {"name":"Cincinnati Reds","venue":"Great American Ball Park","L":7.5,"S":0.0,"coordinates":{"lat":39.0975,"lon":-84.507103},"color":"#C6011F","state":"Ohio"},
   {"name":"Cleveland Guardians","venue":"Progressive Field","L":7.0,"S":0.0,"coordinates":{"lat":41.496262,"lon":-81.686043},"color":"#003087","state":"Ohio"},

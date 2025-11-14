@@ -13,7 +13,7 @@ RUN pip install ipywidgets
 RUN pip install ipyleaflet
 
 # Make port 8888 available to the world outside this container
-EXPOSE 8888
+EXPOSE 8866
 
 # Set the working directory to /app
 WORKDIR /app
@@ -25,5 +25,5 @@ COPY ./*.ipynb /app
 COPY ./*.json /app
 COPY ./*.py /app
 
-# Run Jupyter Notebook when the container launches
-CMD ["jupyter", "notebook", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root"]
+# Run Voila when the container launches
+CMD ["voila", "notebook", "--theme=dark"]
