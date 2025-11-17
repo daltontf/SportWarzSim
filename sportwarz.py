@@ -256,7 +256,8 @@ def create_show_teams(map, leagues: Leagues, co_data_frame:pd.DataFrame):
                 county_rows["league"] = league
                 all_county_rows = pd.concat([all_county_rows, county_rows], ignore_index=True)
       
-
+            if all_county_rows.empty:
+                return
             all_county_rows = all_county_rows.sort_values(by="share", ascending=False)
             for i, county_row in all_county_rows.iterrows():
                 if county_row["share"] > 1/len(leagues[league]["json"]["teams"]):
