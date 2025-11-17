@@ -1,5 +1,5 @@
 {
-"league_name": "National Hockey League", 
+"league_name": "NHL", 
 "weight": 0.4,
 "teams": [
   {"name":"Anaheim Ducks","venue":"Honda Center","L":5.0,"S":-1.0,"coordinates":{"lat":33.807525,"lon":-117.876707},"color":"#FC4C02","state":"California"},

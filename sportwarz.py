@@ -239,10 +239,7 @@ def heatmap_counties(leagues: Leagues, counties_geojson:CountiesGEOJson, league_
         #         "fillOpacity": opacity_for_population(county_row["population"])
         #        }    
 
-def render_map(leagues: Leagues, only_league: str, counties_geojson:CountiesGEOJson, co_data_frame:pd.DataFrame):
-    if only_league: # Only show pop-up for one league
-        leagues = { only_league: leagues[only_league] }
-
+def create_show_teams(map, leagues: Leagues, co_data_frame:pd.DataFrame):
     def show_teams(event, feature, **kwargs): 
         statefp = feature["properties"]["STATEFP"]
         countyfp = feature["properties"]["COUNTYFP"]
@@ -279,7 +276,13 @@ def render_map(leagues: Leagues, only_league: str, counties_geojson:CountiesGEOJ
         except Exception as e:
             popup = Popup(location=(centroid.y, centroid.x), 
                   child=widgets.HTML(str(e)))
-        map.add(popup)    
+        map.add(popup)  
+    return show_teams
+
+
+def render_map(leagues: Leagues, only_league: str, counties_geojson:CountiesGEOJson, co_data_frame:pd.DataFrame):
+    if only_league: # Only show pop-up for one league
+        leagues = { only_league: leagues[only_league] }      
 
     display(widgets.HTML(
         """
@@ -300,7 +303,7 @@ def render_map(leagues: Leagues, only_league: str, counties_geojson:CountiesGEOJ
         hover_style = {"fillColor": "white"}
     )
     
-    layer.on_click(show_teams)
+    layer.on_click(create_show_teams(map, leagues, co_data_frame))
     
     map.add(layer)
     map.add(FullScreenControl())

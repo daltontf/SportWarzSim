@@ -1,5 +1,5 @@
 {
-"league_name": "National Football League", 
+"league_name": "NFL", 
 "weight": 0.9,
 "teams": [
   {"name":"Arizona Cardinals","venue":"State Farm Stadium","L":4.0,"S":0.0,"coordinates":{"lat":33.52728,"lon":-112.26328},"color":"#97233F","state":"Arizona"},
