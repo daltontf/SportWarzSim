@@ -1,0 +1,6 @@
+numpy
+pandas
+ipywidgets
+ipyleaflet
+shapely
+voila

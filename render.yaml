@@ -1,0 +1,8 @@
+# render.yaml
+services:
+  - type: web
+    name: SportWarzSim
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: voila --port $PORT --theme=dark
+    # Optionally specify a custom domain or other settings
