@@ -320,7 +320,28 @@ def league_teams_sums(league_data: League):
         .sum()\
         .sort_values(by='share_population',ascending=False)
 
+def delete_teams(leagues: Leagues, league_name: str, teams: list[str]) -> bool:
+    deleted = False
+    for new_team in teams:
+        for i, team in enumerate(leagues[league_name]["json"]["teams"]):
+            if team["name"] == new_team:
+                leagues[league_name]["json"]["teams"].pop(i)
+                deleted = True
+                break    
+    return deleted   
+
+def replace_geojson_layer(leaflet_map, counties_geojson, leagues, co_data_frame):
+    leaflet_map.remove_layer(leaflet_map.layers[1])
+    layer = GeoJSON(data = counties_geojson, 
+        hover_style = {"fillColor": "white"}
+    )   
+    layer.on_click(create_show_teams(leaflet_map, leagues, co_data_frame)) 
+    leaflet_map.add(layer)   
+    return layer  
+
 def add_team(co_data_frame: pd.DataFrame, leagues: Leagues, league_name: str, new_teams: list[str]):
+    delete_teams(leagues, league_name, new_teams)
+    
     leagues[league_name]["json"]["teams"].extend(new_teams)
 
     calculate_distances(leagues, co_data_frame) 
