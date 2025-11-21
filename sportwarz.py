@@ -7,7 +7,6 @@ import ipywidgets as widgets
 from typing import TypedDict, Union, Dict, NewType
 from IPython.display import display
 from ipyleaflet import Map, GeoJSON, Popup, FullScreenControl, basemaps
-from shapely.geometry import Polygon, Point
 
 class Coordinates(TypedDict):
     lat: float
@@ -88,7 +87,10 @@ def league_teams_sums(league_data) -> pd.DataFrame:
 class LeaguesModel:
     _counties_geojson: CountiesGEOJson
     _leagues: Leagues = { }
-    _co_dataframe: pd.DataFrame   
+    _co_dataframe: pd.DataFrame  
+
+    _geojson_layer: GeoJSON = None
+    _leaflet_map: Map = None
 
     def load_counties_geojson(self):
         with open("./counties.geojson") as f:
@@ -325,7 +327,11 @@ class LeaguesModel:
         map.add(layer)
         map.add(FullScreenControl())
         map.fullscreen = True
-        return (map, layer)   
+        
+        self._geojson_layer = layer
+        self._leaflet_map = map
+
+        return map   
 
     def delete_teams(self, league_name: str, teams: list[str]) -> bool:
         deleted = False
@@ -337,14 +343,19 @@ class LeaguesModel:
                     break    
         return deleted   
 
-    def replace_geojson_layer(self, leaflet_map, old_layer):
-        leaflet_map.remove_layer(old_layer)
+    def refresh_geojson_layer(self):
+        if not self._leaflet_map:
+            return
+        
+        if self._geojson_layer:
+            self._leaflet_map.remove_layer(self._geojson_layer)
+        
         layer = GeoJSON(data = self._counties_geojson, 
             hover_style = {"fillColor": "white"}
         )   
-        layer.on_click(self.create_show_teams(leaflet_map, self._leagues)) 
-        leaflet_map.add(layer)   
-        return layer  
+        layer.on_click(self.create_show_teams(self._leaflet_map, self._leagues)) 
+        self._leaflet_map.add(layer)   
+        self._geojson_layer = layer   
 
     def add_team(self, league_name: str, new_teams: list[str]):
         self.delete_teams(league_name, new_teams)
@@ -364,10 +375,13 @@ class LeaguesModel:
         self.compute_output_dataframe()  
 
     def copy_with_just_league(self, league_name: str):
-        return { 
+        leagues_model = LeaguesModel()
+        leagues_model._co_dataframe = self._co_dataframe
+        leagues_model.load_counties_geojson()
+        leagues_model._leagues =  { 
             league_name: {           
                 "weight": self._leagues[league_name]["weight"],
                 "teams":  self._leagues[league_name]["teams"].copy(),
-                "output_dataframe": self._leagues[league_name]["output_dataframe"].copy(),
             }
         }
+        return leagues_model
