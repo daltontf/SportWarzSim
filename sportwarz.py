@@ -47,50 +47,6 @@ class Feature(TypedDict):
 class CountiesGEOJson(TypedDict):
     features: list[Feature]
 
-def load_counties_geojson() -> CountiesGEOJson:
-    with open("./counties.geojson") as f:
-        return json.load(f)
-
-def load_counties_data(counties_geojson: CountiesGEOJson):
-    co_data_frame = pd.read_csv("./co-est2024-alldata.csv", encoding="iso-8859-1")
-    
-    for feature in counties_geojson["features"]:
-        coords_stack = [ feature["geometry"]["coordinates"] ]
-
-        while isinstance(coords_stack[-1][0], list):
-            coords_stack.append(coords_stack[-1][0]) 
-
-        coords = coords_stack[-2]    
-        try: 
-            raw_polygon = shapely.geometry.Polygon(coords) 
-            state = feature["properties"]["STATEFP"]
-            county = feature["properties"]["COUNTYFP"]
-            co_data_frame.loc[co_data_frame.query(f"STATE == {state} and  COUNTY == {county}").index, "centroid"] = raw_polygon.centroid
-        except Exception as e:
-            print(e)
-            print("Invalid coordinates:", feature["properties"]["Name"])  
-    return co_data_frame
-
-def load_leagues(leagues: Leagues):
-     for league in leagues.keys():
-         with open(f"./teams_{league}.json") as f:
-            leagues[league]["json"]: LeagueJson = json.load(f)
-
-
-def calculate_distances(leagues: Leagues, co_data_frame: pd.DataFrame):
-    for league in leagues.keys():
-        teams = leagues[league]["json"]["teams"]
-
-        # compute distance matrix
-        d = np.zeros((len(co_data_frame), len(teams)))
-        for i, c in co_data_frame.iterrows():
-            if not pd.isna(c["centroid"]):
-                for j, t in enumerate(teams):
-                    d[i,j] = haversine_miles(c["centroid"], t["coordinates"]["lat"], t["coordinates"]["lon"])
- 
-        leagues[league]["distances"] = d  
-
-
 def haversine_miles(centroid, lat2, lon2):
     r = 3958.8  # earth radius miles
     lat1 = centroid.y
@@ -118,80 +74,138 @@ def opacity_for_population(population):
         return 0.3
     if population > 1000:
         return 0.2
-    return 0.1
+    return 0.1    
 
-def compute_shares(leagues: Leagues, co_data_frame: pd.DataFrame):
-    competition_temperature_base = 1 # Lower -> winner takes it
-    not_nearest_multiplier = 2 # added to distance multiplied (d - nearest_d) 
-    not_same_state_multiplier = 2.5
-    canada_multiplier = 2 
-    nearest_key = "nearest"
+def league_teams_sums(league_data) -> pd.DataFrame:
+    league_df = league_data["output_dataframe"]
+    num_teams = len(league_data["teams"])
+    return league_df[league_df["share"].apply(lambda x: x > 1/num_teams)]\
+            [['team_name', 'share_population']]\
+            .groupby('team_name')\
+            .sum()\
+            .sort_values(by='share_population',ascending=False)
+
+class LeaguesModel:
+    _counties_geojson: CountiesGEOJson
+    _leagues: Leagues = { }
+    _co_dataframe: pd.DataFrame   
+
+    def load_counties_geojson(self):
+        with open("./counties.geojson") as f:
+            self._counties_geojson =  json.load(f)
+        
+    def load_counties_data(self):
+        self._co_dataframe = pd.read_csv("./co-est2024-alldata.csv", encoding="iso-8859-1")
     
-    for league in leagues.keys(): 
-        d = leagues[league]["distances"] 
-        league_weight = leagues[league]['json']["weight"]
-        league_distance_decay = .002 / league_weight 
+        for feature in self._counties_geojson["features"]:
+            coords_stack = [ feature["geometry"]["coordinates"] ]
 
-        shares = np.zeros_like(d)
-        co_data_frame[nearest_key] = float('nan')
-        for j, t in enumerate(leagues[league]["json"]["teams"]):
-            for i, c in co_data_frame.iterrows():    
-                nearest = co_data_frame.loc[i, nearest_key]
-                if pd.isna(nearest) or d[i,j] < nearest:
-                    co_data_frame.loc[i, nearest_key] = d[i,j] 
+            while isinstance(coords_stack[-1][0], list):
+                coords_stack.append(coords_stack[-1][0]) 
 
-        for i, c in co_data_frame.iterrows():            
-            nearest_d = c[nearest_key]
-            nearest_effective_d = 1000000
-            county_state = c["STNAME"]
-            R = np.zeros_like(d[i])
-            for j, t in enumerate(leagues[league]["json"]["teams"]):
-                effective_d = d[i,j]
-                N = t.get("N", 5.0)
-                if not pd.isna(nearest_d) and effective_d > nearest_d:
-                    effective_d = nearest_d + ((effective_d - nearest_d) * not_nearest_multiplier)
-                team_state = t["state"] 
-                if isinstance(team_state, list):
-                    if not county_state in team_state:
+            coords = coords_stack[-2]    
+            try: 
+                raw_polygon = shapely.geometry.Polygon(coords) 
+                state = feature["properties"]["STATEFP"]
+                county = feature["properties"]["COUNTYFP"]
+                self._co_dataframe.loc[self._co_dataframe.query(f"STATE == {state} and  COUNTY == {county}").index, "centroid"] = raw_polygon.centroid
+            except Exception as e:
+                print(e)
+                print("Invalid coordinates:", feature["properties"]["Name"])  
+
+    def load_leagues(self, league_names: list[str]):
+     for league in league_names:
+         with open(f"./teams_{league}.json") as f:
+            self._leagues[league] = json.load(f)
+
+    def add_league(self, league_data:League):
+        self._leagues = { league_data["league_name"]: league_data }
+
+    def calculate_distances(self):
+        for league in self._leagues.keys():
+            teams = self._leagues[league]["teams"]
+
+            # compute distance matrix
+            d = np.zeros((len(self._co_dataframe), len(teams)))
+            for i, c in self._co_dataframe.iterrows():
+                if not pd.isna(c["centroid"]):
+                    for j, t in enumerate(teams):
+                        d[i,j] = haversine_miles(c["centroid"], t["coordinates"]["lat"], t["coordinates"]["lon"])
+ 
+            self._leagues[league]["distances"] = d  
+
+    def compute_shares(self):
+        competition_temperature_base = 1 # Lower -> winner takes it
+        not_nearest_multiplier = 2 # added to distance multiplied (d - nearest_d) 
+        not_same_state_multiplier = 2.5
+        canada_multiplier = 2 
+        nearest_key = "nearest"
+    
+        for league in self._leagues.keys(): 
+            d = self._leagues[league]["distances"] 
+            league_weight = self._leagues[league]["weight"]
+            league_distance_decay = .002 / league_weight 
+
+            shares = np.zeros_like(d)
+            self._co_dataframe[nearest_key] = float('nan')
+            for j, t in enumerate(self._leagues[league]["teams"]):
+                for i, c in self._co_dataframe.iterrows():    
+                    nearest = self._co_dataframe.loc[i, nearest_key]
+                    if pd.isna(nearest) or d[i,j] < nearest:
+                        self._co_dataframe.loc[i, nearest_key] = d[i,j] 
+
+            for i, c in self._co_dataframe.iterrows():            
+                nearest_d = c[nearest_key]
+                nearest_effective_d = 1000000
+                county_state = c["STNAME"]
+                R = np.zeros_like(d[i])
+                for j, t in enumerate(self._leagues[league]["teams"]):
+                    effective_d = d[i,j]
+                    N = t.get("N", 5.0)
+                    if not pd.isna(nearest_d) and effective_d > nearest_d:
+                        effective_d = nearest_d + ((effective_d - nearest_d) * not_nearest_multiplier)
+                    team_state = t["state"] 
+                    if isinstance(team_state, list):
+                        if not county_state in team_state:
+                            effective_d *= not_same_state_multiplier 
+                    elif county_state != team_state:
                         effective_d *= not_same_state_multiplier 
-                elif county_state != team_state:
-                    effective_d *= not_same_state_multiplier 
-                    if "eh" in t:
-                        effective_d *= canada_multiplier     
-                if effective_d < nearest_effective_d:
-                    nearest_effective_d = effective_d 
-                team_distance_decay = league_distance_decay * (5/N)
-                D = np.exp(-team_distance_decay * min(effective_d, 15000/N))
-                DS = np.exp(-team_distance_decay * effective_d * 2)  #short term enthusiasm dissipates faster             
-                R[j] = ((league_weight * 10) + t["L"]  * D)  + ((league_weight * 10) + t["S"] * DS)   
+                        if "eh" in t:
+                            effective_d *= canada_multiplier     
+                    if effective_d < nearest_effective_d:
+                        nearest_effective_d = effective_d 
+                    team_distance_decay = league_distance_decay * (5/N)
+                    D = np.exp(-team_distance_decay * min(effective_d, 15000/N))
+                    DS = np.exp(-team_distance_decay * effective_d * 2)  #short term enthusiasm dissipates faster             
+                    R[j] = ((league_weight * 10) + t["L"]  * D)  + ((league_weight * 10) + t["S"] * DS)   
 
-            #competition_temperature = np.log10((5 + d.min()) / 5) + competition_temperature_base
-            expR = np.exp(R / competition_temperature_base)
+                #competition_temperature = np.log10((5 + d.min()) / 5) + competition_temperature_base
+                expR = np.exp(R / competition_temperature_base)
           
-            raw_shares =  expR / expR.sum(keepdims=True)
+                raw_shares =  expR / expR.sum(keepdims=True)
 
-            # Another attempt at simulating "non-fandom"
-            # min_share = raw_shares.min() + (.01 * raw_shares.max())
-            # for j in range(len(raw_shares)):
-            #     raw_shares[j] = max(0, raw_shares[j] - min_share)
+                # Another attempt at simulating "non-fandom"
+                # min_share = raw_shares.min() + (.01 * raw_shares.max())
+                # for j in range(len(raw_shares)):
+                #     raw_shares[j] = max(0, raw_shares[j] - min_share)
 
-            shares[i] = raw_shares
+                shares[i] = raw_shares
 
-        leagues[league]["shares"] = shares     
+            self._leagues[league]["shares"] = shares     
 
-def compute_output_dataframes(leagues: Leagues, co_data_frame: pd.DataFrame):
-    for league in leagues.keys(): 
-        d = leagues[league]["distances"]
+    def compute_output_dataframe(self):
+        for league in self._leagues.keys(): 
+            d = self._leagues[league]["distances"]
     
-        shares = leagues[league]["shares"]
+            shares = self._leagues[league]["shares"]
     
-        dataframe_out = []
-        for i, c in co_data_frame.iterrows():
-            for j, t in enumerate(leagues[league]["json"]["teams"]):
-                share = shares[i,j]
-                share_population = c["POPESTIMATE2020"] * share
-                #if share > 0.001: # or share_population > 1000: # algoritm assumes everyone is a fan of some team in then
-                dataframe_out.append({
+            dataframe_out = []
+            for i, c in self._co_dataframe.iterrows():
+                for j, t in enumerate(self._leagues[league]["teams"]):
+                    share = shares[i,j]
+                    share_population = c["POPESTIMATE2020"] * share
+                    #if share > 0.001: # or share_population > 1000: # algoritm assumes everyone is a fan of some team in then
+                    dataframe_out.append({
                         "county": c["CTYNAME"],
                         "countyfp": c["COUNTY"],
                         "state": c["STNAME"],
@@ -201,169 +215,159 @@ def compute_output_dataframes(leagues: Leagues, co_data_frame: pd.DataFrame):
                         "share_population": share_population,
                         "effective_distance": d[i,j],
                         "share": share,
-                })
-        leagues[league]["dataframes"] = pd.DataFrame(dataframe_out)    
+                    })
+            self._leagues[league]["output_dataframe"] = pd.DataFrame(dataframe_out)    
 
-def reset_county_styles(counties_geojson: CountiesGEOJson):
-    default_style = {
-        "color": "grey",
-        "weight": 1,
-        "fillColor": "grey",
-        "fillOpacity": 0.0,
-    }
+    def reset_county_styles(self):
+        default_style = {
+            "color": "grey",
+            "weight": 1,
+            "fillColor": "grey",
+            "fillOpacity": 0.0,
+        }
 
-    for feature in counties_geojson["features"]:
-        feature["properties"]["style"] = default_style    
+        for feature in self._counties_geojson["features"]:
+            feature["properties"]["style"] = default_style    
 
-def heatmap_counties(leagues: Leagues, counties_geojson:CountiesGEOJson, league_name: str, share_threshold = 0.05): 
-    for feature in counties_geojson["features"]:
-       state = feature["properties"]["STATEFP"]
-       county = feature["properties"]["COUNTYFP"]
-       county_rows = leagues[league_name]["dataframes"].query(f"statefp == {state} & countyfp == {county}").sort_values(by="share", ascending=False)
-       if county_rows.shape[0] > 0:
-           group_cols = list(county_rows.columns.difference(["share"]))
-           county_rows = county_rows.groupby(group_cols, as_index=False).max().sort_values(by="share", ascending=False)
-           county_row = county_rows.iloc[0]
-           if county_row["share"] > share_threshold:   
-                feature["properties"]["style"] = {
-                "color": "grey",
-                "weight": 1,
-                "fillColor": county_row["color"] ,
-                "fillOpacity": opacity_for_population(county_row["share_population"])
-                }               
-        #    elif isinstance(team_color_map, str):
-        #        feature["properties"]["style"] = {
-        #         "color": "grey",
-        #         "weight": 1,
-        #         "fillColor": team_color_map,
-        #         "fillOpacity": opacity_for_population(county_row["population"])
-        #        }    
+    def heatmap_counties(self, league_name: str, share_threshold = 0.05): 
+        self.reset_county_styles()
+        for feature in self._counties_geojson["features"]:
+            state = feature["properties"]["STATEFP"]
+            county = feature["properties"]["COUNTYFP"]
+            county_rows = self._leagues[league_name]["output_dataframe"].query(f"statefp == {state} & countyfp == {county}").sort_values(by="share", ascending=False)
+            if county_rows.shape[0] > 0:
+                group_cols = list(county_rows.columns.difference(["share"]))
+                county_rows = county_rows.groupby(group_cols, as_index=False).max().sort_values(by="share", ascending=False)
+                county_row = county_rows.iloc[0]
+                if county_row["share"] > share_threshold:   
+                    feature["properties"]["style"] = {
+                    "color": "grey",
+                    "weight": 1,
+                    "fillColor": county_row["color"] ,
+                    "fillOpacity": opacity_for_population(county_row["share_population"])
+                    }               
+            #    elif isinstance(team_color_map, str):
+            #        feature["properties"]["style"] = {
+            #         "color": "grey",
+            #         "weight": 1,
+            #         "fillColor": team_color_map,
+            #         "fillOpacity": opacity_for_population(county_row["population"])
+            #        }    
+    
+    def create_show_teams(self, leaflet_map:Map, popup_leagues:Leagues):
+        def show_teams(event, feature, **kwargs): 
+            statefp = feature["properties"]["STATEFP"]
+            countyfp = feature["properties"]["COUNTYFP"]
+            row = self._co_dataframe.query(f"STATE == {statefp} & COUNTY == {countyfp}") 
+            centroid = row["centroid"].iloc[0]
+            population = row["POPESTIMATE2020"].iloc[0]
 
-def create_show_teams(map, leagues: Leagues, co_data_frame:pd.DataFrame):
-    def show_teams(event, feature, **kwargs): 
-        statefp = feature["properties"]["STATEFP"]
-        countyfp = feature["properties"]["COUNTYFP"]
-        row = co_data_frame.query(f"STATE == {statefp} & COUNTY == {countyfp}") 
-        centroid = row["centroid"].iloc[0]
-        population = row["POPESTIMATE2020"].iloc[0]
-
-        all_county_rows = pd.DataFrame()    
-        leagues_table = ""  
-        try:
-            for league in leagues.keys():
-                county_rows = leagues[league]["dataframes"].query(f"statefp == {statefp} & countyfp == {countyfp}")[["team_name", "share"]]
-                county_rows = county_rows.groupby(['team_name'], as_index=False).max()
-                county_rows["league"] = league
-                all_county_rows = pd.concat([all_county_rows, county_rows], ignore_index=True)
+            all_county_rows = pd.DataFrame()    
+            leagues_table = ""  
+            try:
+                for league in popup_leagues.keys():
+                    county_rows = self._leagues[league]["output_dataframe"].query(f"statefp == {statefp} & countyfp == {countyfp}")[["team_name", "share"]]
+                    county_rows = county_rows.groupby(['team_name'], as_index=False).max()
+                    county_rows["league"] = league
+                    all_county_rows = pd.concat([all_county_rows, county_rows], ignore_index=True)
       
-            if all_county_rows.empty:
-                return
-            all_county_rows = all_county_rows.sort_values(by="share", ascending=False)
-            for i, county_row in all_county_rows.iterrows():
-                if county_row["share"] > 1/len(leagues[league]["json"]["teams"]):
-                    leagues_table += (
+                if all_county_rows.empty:
+                    return
+                all_county_rows = all_county_rows.sort_values(by="share", ascending=False)
+                for i, county_row in all_county_rows.iterrows():
+                    if county_row["share"] > 1/len(self._leagues[league]["teams"]):
+                        leagues_table += (
                         "<tr>"  
                         f"<td>{county_row['league']}</td>" 
                         f"<td>{county_row['team_name']}</td>" 
                         f"<td>{round(county_row['share'] * 100, 1)}%</td>" 
                         "</tr>")
        
-            popup = Popup(location=(centroid.y, centroid.x), 
-                  child=widgets.HTML("<table border='1' style='border-collapse: collapse'>" +
-                  f'<caption>{feature["properties"]["Name"]} - {population}</caption>' +    
-                  leagues_table +
-                  "</table>"  
-            ))
-        except Exception as e:
-            popup = Popup(location=(centroid.y, centroid.x), 
-                  child=widgets.HTML(str(e)))
-        map.add(popup)  
-    return show_teams
+                popup = Popup(location=(centroid.y, centroid.x), 
+                    child=widgets.HTML("<table border='1' style='border-collapse: collapse'>" +
+                    f'<caption>{feature["properties"]["Name"]} - {population}</caption>' +    
+                    leagues_table +
+                "</table>"  
+                ))
+            except Exception as e:
+                popup = Popup(location=(centroid.y, centroid.x), 
+                    child=widgets.HTML(str(e)))
+            leaflet_map.add(popup)
+        return show_teams  
 
+    def render_map(self, only_league: str) -> Map:
+        if only_league: # Only show pop-up for one league
+            popup_leagues = { only_league: self._leagues[only_league] } 
+        else:
+            popup_leagues = self._leagues     
 
-def render_map(leagues: Leagues, only_league: str, counties_geojson:CountiesGEOJson, co_data_frame:pd.DataFrame):
-    if only_league: # Only show pop-up for one league
-        leagues = { only_league: leagues[only_league] }      
+        display(widgets.HTML(
+            """
+            <style>
+            .leaflet-popup-content-wrapper .leaflet-popup-tip {
+                background-color: black;
+                border: 2px solid black;
+            }
+            .leaflet-popup-content {
+                color: white;
+            }
+            </style>"""    
+        ))
 
-    display(widgets.HTML(
-        """
-        <style>
-        .leaflet-popup-content-wrapper .leaflet-popup-tip {
-            background-color: black;
-            border: 2px solid black;
-        }
-        .leaflet-popup-content {
-            color: white;
-        }
-        </style>"""    
-    ))
+        map = Map(basemap=basemaps.CartoDB.Positron, center=[38.72728229549864, -96.9010842308538], zoom=5, scroll_wheel_zoom=True)
 
-    map = Map(basemap=basemaps.CartoDB.Positron, center=[38.72728229549864, -96.9010842308538], zoom=5, scroll_wheel_zoom=True)
-
-    layer = GeoJSON(data = counties_geojson, 
-        hover_style = {"fillColor": "white"}
-    )
+        layer = GeoJSON(data = self._counties_geojson, 
+            hover_style = {"fillColor": "white"}
+        )
     
-    layer.on_click(create_show_teams(map, leagues, co_data_frame))
+        layer.on_click(self.create_show_teams(map, popup_leagues))
     
-    map.add(layer)
-    map.add(FullScreenControl())
-    map.fullscreen = True
-    return map   
+        map.add(layer)
+        map.add(FullScreenControl())
+        map.fullscreen = True
+        return (map, layer)   
 
-def league_teams_sums(league_data: League):
-    league_dfs = league_data["dataframes"]
-    num_teams = len(league_data["json"]["teams"])
-    return league_dfs[league_dfs["share"].apply(lambda x: x > 1/num_teams)]\
-        [['team_name', 'share_population']]\
-        .groupby('team_name')\
-        .sum()\
-        .sort_values(by='share_population',ascending=False)
+    def delete_teams(self, league_name: str, teams: list[str]) -> bool:
+        deleted = False
+        for new_team in teams:
+            for i, team in enumerate(self._leagues[league_name]["teams"]):
+                if team["name"] == new_team:
+                    self._leagues[league_name]["teams"].pop(i)
+                    deleted = True
+                    break    
+        return deleted   
 
-def delete_teams(leagues: Leagues, league_name: str, teams: list[str]) -> bool:
-    deleted = False
-    for new_team in teams:
-        for i, team in enumerate(leagues[league_name]["json"]["teams"]):
-            if team["name"] == new_team:
-                leagues[league_name]["json"]["teams"].pop(i)
-                deleted = True
-                break    
-    return deleted   
+    def replace_geojson_layer(self, leaflet_map, old_layer):
+        leaflet_map.remove_layer(old_layer)
+        layer = GeoJSON(data = self._counties_geojson, 
+            hover_style = {"fillColor": "white"}
+        )   
+        layer.on_click(self.create_show_teams(leaflet_map, self._leagues)) 
+        leaflet_map.add(layer)   
+        return layer  
 
-def replace_geojson_layer(leaflet_map, counties_geojson, leagues, co_data_frame):
-    leaflet_map.remove_layer(leaflet_map.layers[1])
-    layer = GeoJSON(data = counties_geojson, 
-        hover_style = {"fillColor": "white"}
-    )   
-    layer.on_click(create_show_teams(leaflet_map, leagues, co_data_frame)) 
-    leaflet_map.add(layer)   
-    return layer  
-
-def add_team(co_data_frame: pd.DataFrame, leagues: Leagues, league_name: str, new_teams: list[str]):
-    delete_teams(leagues, league_name, new_teams)
+    def add_team(self, league_name: str, new_teams: list[str]):
+        self.delete_teams(league_name, new_teams)
     
-    leagues[league_name]["json"]["teams"].extend(new_teams)
+        self._leagues[league_name]["teams"].extend(new_teams)
 
-    calculate_distances(leagues, co_data_frame) 
-    compute_shares(leagues, co_data_frame)  
-    compute_output_dataframes(leagues, co_data_frame)    
-    return leagues
+        self.calculate_distances() 
+        self.compute_shares()  
+        self.compute_output_dataframe()    
 
-def update_team(co_data_frame: pd.DataFrame, leagues: Leagues, league_name: str, team_name: str, attrs: dict[str, object]):
-    for i, team in enumerate(leagues[league_name]["json"]["teams"]):
-        if team["name"] == team_name:
-            leagues[league_name]["json"]["teams"][i] = team | attrs
-    calculate_distances(leagues, co_data_frame) 
-    compute_shares(leagues, co_data_frame)  
-    compute_output_dataframes(leagues, co_data_frame)  
-    return leagues
+    def update_team(self, league_name: str, team_name: str, attrs: dict[str, object]):
+        for i, team in enumerate(self._leagues[league_name]["teams"]):
+            if team["name"] == team_name:
+                self._leagues[league_name]["teams"][i] = team | attrs
+        self.calculate_distances() 
+        self.compute_shares()  
+        self.compute_output_dataframe()  
 
-def copy_with_just_league(leagues:Leagues, league_name: str):
-    return { 
-        league_name: {           
-            "json": {
-                "weight": leagues[league_name]["json"]["weight"],
-                "teams":  leagues[league_name]["json"]["teams"].copy()
+    def copy_with_just_league(self, league_name: str):
+        return { 
+            league_name: {           
+                "weight": self._leagues[league_name]["weight"],
+                "teams":  self._leagues[league_name]["teams"].copy(),
+                "output_dataframe": self._leagues[league_name]["output_dataframe"].copy(),
             }
         }
-    }
