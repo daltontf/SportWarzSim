@@ -17,6 +17,7 @@ class Team(TypedDict, total=False):
     venue: str
     L: float
     S: float
+    N: float
     color: str
     state: Union[str, list[str]]
     coordinates: Coordinates
@@ -357,9 +358,9 @@ class LeaguesModel:
         self._leaflet_map.add(layer)   
         self._geojson_layer = layer   
 
-    def add_team(self, league_name: str, new_teams: list[str]):
-        self.delete_teams(league_name, new_teams)
-    
+    def add_teams(self, league_name: str, new_teams: list[Team]):
+        self.delete_teams(league_name, list(map(lambda team: team["name"], new_teams)))
+        
         self._leagues[league_name]["teams"].extend(new_teams)
 
         self.calculate_distances() 
@@ -385,3 +386,14 @@ class LeaguesModel:
             }
         }
         return leagues_model
+
+    def show_pre_post_merged_results(self, league_name:str, after_model: Leagues):
+        pre_sums = league_teams_sums(self._leagues[league_name])
+        post_sums = league_teams_sums(after_model._leagues[league_name])
+        merged = pd.merge(pre_sums, post_sums, on='team_name', how='outer', suffixes=("_before", "_after"))
+        merged["share_population_before"].fillna(0, inplace = True) 
+        merged["share_population_after"].fillna(0, inplace = True) 
+        merged["share_population_delta"] = merged["share_population_after"] - merged["share_population_before"]
+        print(merged)
+        print(f'Sums\t: {merged["share_population_before"].sum():,.0f}\t{merged["share_population_after"].sum():,.0f}')
+        print(f'Sum Delta = {(merged["share_population_after"].sum() - merged["share_population_before"].sum()):,.0f}') 
