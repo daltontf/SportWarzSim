@@ -12,6 +12,10 @@ class Coordinates(TypedDict):
     lat: float
     lon: float
 
+    def __init__(self, lat:float, lon:float):
+        self["lat"] = lat
+        self["lon"] = lon
+
 class Team(TypedDict, total=False):
     name: str
     venue: str
@@ -92,6 +96,10 @@ class LeaguesModel:
 
     _geojson_layer: GeoJSON = None
     _leaflet_map: Map = None
+
+    last_click_lat = 37.7
+    last_click_lon = -97.3  
+    last_click_state: str = "Kansas"
 
     def load_counties_geojson(self):
         with open("./counties.geojson") as f:
@@ -269,8 +277,8 @@ class LeaguesModel:
             leagues_table = ""  
             try:
                 for league in popup_leagues.keys():
-                    county_rows = self._leagues[league]["output_dataframe"].query(f"statefp == {statefp} & countyfp == {countyfp}")[["team_name", "share"]]
-                    county_rows = county_rows.groupby(['team_name'], as_index=False).max()
+                    county_rows = self._leagues[league]["output_dataframe"].query(f"statefp == {statefp} & countyfp == {countyfp}")[["team_name", 'state', "share"]]
+                    county_rows = county_rows.groupby(['team_name', 'state'], as_index=False).max()
                     county_rows["league"] = league
                     all_county_rows = pd.concat([all_county_rows, county_rows], ignore_index=True)
       
@@ -286,6 +294,10 @@ class LeaguesModel:
                         f"<td>{round(county_row['share'] * 100, 1)}%</td>" 
                         "</tr>")
        
+                self.last_click_lat = centroid.y
+                self.last_click_lon = centroid.x
+                self.last_click_state = all_county_rows.iloc[0]["state"]
+
                 popup = Popup(location=(centroid.y, centroid.x), 
                     child=widgets.HTML("<table border='1' style='border-collapse: collapse'>" +
                     f'<caption>{feature["properties"]["Name"]} - {population}</caption>' +    
