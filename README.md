@@ -1,4 +1,4 @@
-This is an attempt to apply a mathematical model to US counties to predict the level of support within. This is inspired by many similar things on the internet like:
+This project applies a mathematical model to U.S. counties to estimate the level of fan support for professional sports teams. It is inspired by several Tableau projects that visualize Twitter followers by county:
 
 - https://public.tableau.com/app/profile/matt.sorenson/viz/NFLFollowerMap/NFLMap
 
@@ -10,9 +10,10 @@ This is an attempt to apply a mathematical model to US counties to predict the l
 
 - https://public.tableau.com/app/profile/matt.sorenson/viz/MLSFanMap/MLSMap
 
-The above all use Twitter followers for the counts and many counties do have a rather small sample size.
+These visualizations rely on Twitter followers, which often provide small sample sizes at the county level.
+Instead, this model estimates potential fan bases, removing a team only if its estimated support in a county falls below pure random choice (i.e., 1 / # of teams in the league).
 
-This model for the most part measures potential fans. The only time fans are dropped as being non-fans at this point is if the percentage that supports a team in a county drops below the percentage that of the fans support 
+The term “Warz” comes from a related idea: a strategy simulation game in which players attempt to maximize fan bases by investing in teams across leagues.
 
 #### Examples of MLB and NHL Heat Maps
 
@@ -20,33 +21,57 @@ This model for the most part measures potential fans. The only time fans are dro
 
 ![NHL Heat Map](./NHLHeatMap.png)
 
+#### Running 
+
+- Currently, the model is implemented as a Jupyter notebook served via Voila.
+(Still searching for a reliable and inexpensive hosting option.)
+
+- You can also run it via Docker:
+
+```
+docker pull daltontf1212/sportwarzsim:latest
+docker run -p 8866:8866 daltontf1212/sportwarzsim:latest
+```
+
+Navigate to http://localhost:8866/
+
 #### Things taken into account:
 
 - Popularity of the league / sport (league_weight)
 
-- Long-term establishment of the team. This could called allegiance, equity, etc. In in the code referred as "L"
+- Long-term establishment of the team. This could called allegiance, equity, etc. Referred as "L"
     
-    - Teams gain this by over time:
+    Represents durable support built over time. Builds over time by:
     
-        - Simply existing and accelerated or slowed by having positive/zero or negative short-term enthusiasm.        
+        - Existing continually in a market
+        
+        - Sustained fan engagement  
 
-- Short-term enthusiasm. In the code referred as "S"
+        - Sustained fan engagement
+
+        - Can stagnate or decline during long periods of apathy, irrelevance, or losing      
+
+- Short-term enthusiasm. ("S")
+    
+    Represents excitement, novelty, and momentum:
 
     - Expansion and relocated teams.
 
-    - Team is performing well though highly established teams will not be as enthused as this is expected of them. 
+    - Strong recent performance (especially for teams that aren’t already elite)
     
-    - Team has phenom or marquee player
+    - Arrival of marquee or phenom players
 
 - National footprint. In the code, "N".
+
+    Measures cultural influence beyond local geography:
 
     - Large markets 
 
     - Dedicated broadcaster like WGN (Chicago Cubs), TBS (Atlanta Braves) and KMOX Radio historically for the St. Louis Cardinals.
 
-    - The marquee or phenom can do this too. Messi, Lebron, Ohtani, etc
+    - Star-driven brands (e.g., Messi, LeBron, Ohtani)
 
-- Distance from venue dissipates loyalty. Higher "N" value increases "range".
+    - Modifiers:
     
     - Teams other than the nearest team with have an effective distance that is longer. 
 
@@ -68,13 +93,13 @@ The code does none of the "L", "S" or "N" accumlation over time. The current val
 
     - Larger markets teams with big name rosters will have higher value here. 
 
-    - Teams with good reputations from the days past like the Dallas Cowboys.
+    - Iconic teams retain reputation even outside peak eras (e.g., Dallas Cowboys)
 
 #### "Fun" aspects I'd like to be able to do
 
 - Model expansion and relocation to see if fans are gained and how existing fan bases might shift
 
-    - Even silly things like major city in Delaware getting teams like the Metropolis Meteors.
+    - Even silly things like fictional major city in Delaware getting teams like the "Metropolis Meteors".
 
 - Model what might happen if a league implemented some kind of pro/rel scheme. Enthusiasm for such team would go negative and long term allegiance would to start tp lower if promotion is earned back quickly.
 
@@ -98,9 +123,8 @@ Experimenting with having a "virtual" team in location with same name as parent 
 
 #### Quirks that trickier to mitigate
 
-- Distance is direct "as the crow flies". This leads to quirks where teams in western Michigan are more loyal to Green Bay than they likely are. 
+- Distance is direct "as the crow flies". This leads to quirks where teams in western Michigan are more loyal to Green Bay than they likely are. Around bodies of water is one place this occurs
 
 - A farther market may be easier to travel to. Springfield Missouri is closer to Kansas City than St. Louis, but has more Cardinals fans. Recently the Cardinal put a AA affiliate there but mostly because I-44. This is a bit mitigated by the having the AA team in the data.
 
 - Since the NFL's Giants and Jets play in the same venue, it will be a challenge to program in the geographic tendencies on those two teams. This could be mitigate be having a "virtual" teams in areas.
-
