@@ -30,6 +30,7 @@ The term “Warz” comes from a related idea: a strategy simulation game in whi
 
 ```
 docker pull daltontf1212/sportwarzsim:latest
+
 docker run -p 8866:8866 daltontf1212/sportwarzsim:latest
 ```
 
@@ -43,13 +44,13 @@ Navigate to http://localhost:8866/
     
     Represents durable support built over time. Builds over time by:
     
-        - Existing continually in a market
+    - Existing continually in a market
         
-        - Sustained fan engagement  
+    - Sustained fan engagement  
 
-        - Sustained fan engagement
+    - Sustained fan engagement
 
-        - Can stagnate or decline during long periods of apathy, irrelevance, or losing      
+    - Can stagnate or decline during long periods of apathy, irrelevance, or losing      
 
 - Short-term enthusiasm. ("S")
     
@@ -57,7 +58,7 @@ Navigate to http://localhost:8866/
 
     - Expansion and relocated teams.
 
-    - Strong recent performance (especially for teams that aren’t already elite)
+    - Strong recent performance (especially for teams that aren not already elite)
     
     - Arrival of marquee or phenom players
 
@@ -123,7 +124,7 @@ Experimenting with having a "virtual" team in location with same name as parent 
 
 #### Quirks that trickier to mitigate
 
-- Distance is direct "as the crow flies". This leads to quirks where teams in western Michigan are more loyal to Green Bay than they likely are. Around bodies of water is one place this occurs
+- Distance is direct "as the crow flies". This leads to quirks where teams in western Michigan are more loyal to Green Bay or Milwaukee than they likely are. Around bodies of water is one place this kind of stuff occurs
 
 - A farther market may be easier to travel to. Springfield Missouri is closer to Kansas City than St. Louis, but has more Cardinals fans. Recently the Cardinal put a AA affiliate there but mostly because I-44. This is a bit mitigated by the having the AA team in the data.
 
