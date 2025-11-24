@@ -196,7 +196,8 @@ class LeaguesModel:
                 raw_shares =  expR / expR.sum(keepdims=True)
 
                 # Another attempt at simulating "non-fandom"
-                # min_share = raw_shares.min() + (.01 * raw_shares.max())
+                # this one breaks down when leagues are small. A ten-team league could only get 90% share top.
+                # min_share = 1/len(raw_shares)
                 # for j in range(len(raw_shares)):
                 #     raw_shares[j] = max(0, raw_shares[j] - min_share)
 
@@ -364,7 +365,10 @@ class LeaguesModel:
             self._leaflet_map.remove_layer(self._geojson_layer)
         
         layer = GeoJSON(data = self._counties_geojson, 
-            hover_style = {"fillColor": "white"}
+            hover_style = {
+                "fillColor": "white",
+                "fillOpacity": 0.0,
+           }
         )   
         layer.on_click(self.create_show_teams(self._leaflet_map, self._leagues)) 
         self._leaflet_map.add(layer)   
@@ -395,6 +399,7 @@ class LeaguesModel:
             league_name: {           
                 "weight": self._leagues[league_name]["weight"],
                 "teams":  self._leagues[league_name]["teams"].copy(),
+                "output_dataframe": self._leagues[league_name]["output_dataframe"]
             }
         }
         return leagues_model
@@ -403,8 +408,8 @@ class LeaguesModel:
         pre_sums = league_teams_sums(self._leagues[league_name])
         post_sums = league_teams_sums(after_model._leagues[league_name])
         merged = pd.merge(pre_sums, post_sums, on='team_name', how='outer', suffixes=("_before", "_after"))
-        merged["share_population_before"].fillna(0, inplace = True) 
-        merged["share_population_after"].fillna(0, inplace = True) 
+        merged["share_population_before"] = merged["share_population_before"].fillna(0) 
+        merged["share_population_after"] = merged["share_population_after"].fillna(0) 
         merged["share_population_delta"] = merged["share_population_after"] - merged["share_population_before"]
         print(merged)
         print(f'Sums\t: {merged["share_population_before"].sum():,.0f}\t{merged["share_population_after"].sum():,.0f}')
