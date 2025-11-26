@@ -81,9 +81,8 @@ def opacity_for_population(population):
     return 0.1    
 
 def league_teams_sums(league_data) -> pd.DataFrame:
-    league_df = league_data["output_dataframe"]
-    return league_df[league_df["share"].apply(lambda x: x > 0)]\
-            [['team_name', 'share_population', 'share_population_value']]\
+    league_df = pd.concat(league_data["output_dataframe_map"].values())
+    return league_df[['team_name', 'share_population', 'share_population_value']]\
             .groupby('team_name')\
             .sum()\
             .sort_values(by='share_population',ascending=False)
@@ -156,7 +155,6 @@ class LeaguesModel:
             league_weight = self._leagues[league]["weight"]
             league_distance_decay = .002 / league_weight 
 
-            shares = np.zeros_like(d)
             self._co_dataframe[nearest_key] = float('nan')
             for j, t in enumerate(self._leagues[league]["teams"]):
                 for i, c in self._co_dataframe.iterrows():    
@@ -164,6 +162,7 @@ class LeaguesModel:
                     if pd.isna(nearest) or d[i,j] < nearest:
                         self._co_dataframe.loc[i, nearest_key] = d[i,j] 
 
+            dataframe_map = { }
             for i, c in self._co_dataframe.iterrows():            
                 nearest_d = c[nearest_key]
                 nearest_effective_d = 1000000
@@ -194,44 +193,25 @@ class LeaguesModel:
           
                 raw_shares =  expR / expR.sum(keepdims=True)
 
-                distance_value_multipliers = np.exp(-d / (league_weight * 1000)) # TODO? denominator vary per team based on N
+                distance_value_multipliers = np.exp(-d[i] / (league_weight * 1000)) # TODO? denominator vary per team based on N
 
-                # Another attempt at simulating "non-fandom"
-                # this one breaks down when leagues are small. A ten-team league could only get 90% share top.
-                # min_share = 1/len(raw_shares)
-                # for j in range(len(raw_shares)):
-                #     raw_shares[j] = max(0, raw_shares[j] - min_share)
-
-                shares[i] = raw_shares
-
-            self._leagues[league]["shares"] = shares  
-            self._leagues[league]["share_value_multipliers"] = shares * distance_value_multipliers  
-
-    def compute_output_dataframe(self):
-        for league in self._leagues.keys(): 
-            d = self._leagues[league]["distances"]    
-            shares = self._leagues[league]["shares"]
-            share_value_multipliers = self._leagues[league]["share_value_multipliers"]
-    
-            dataframe_out = []
-            for i, c in self._co_dataframe.iterrows():
+                dataframe_out = []
                 for j, t in enumerate(self._leagues[league]["teams"]):
-                    share = shares[i,j]
-                    share_population = c["POPESTIMATE2020"] * share
-                    share_population_value = share_population * share_value_multipliers[i,j]
+                    share_population = c["POPESTIMATE2020"] * raw_shares[j]
+                    share_population_value = share_population * distance_value_multipliers[j]
                     dataframe_out.append({
                         "county": c["CTYNAME"],
-                        "countyfp": c["COUNTY"],
                         "state": c["STNAME"],
-                        "statefp": c["STATE"],
                         "team_name": t["name"],
                         "color": t["color"],
+                        "share": raw_shares[j],
                         "share_population": share_population,
-                        "share_population_value": share_population_value,
-                        "effective_distance": d[i,j],
-                        "share": share,
+                        "share_population_value": share_population_value
                     })
-            self._leagues[league]["output_dataframe"] = pd.DataFrame(dataframe_out)    
+        
+                dataframe_map[(c["STATE"], c["COUNTY"])] = pd.DataFrame(dataframe_out)
+
+            self._leagues[league]["output_dataframe_map"] = dataframe_map          
 
     def reset_county_styles(self):
         default_style = {
@@ -249,8 +229,8 @@ class LeaguesModel:
         for feature in self._counties_geojson["features"]:
             state = feature["properties"]["STATEFP"]
             county = feature["properties"]["COUNTYFP"]
-            county_rows = self._leagues[league_name]["output_dataframe"].query(f"statefp == {state} & countyfp == {county}").sort_values(by="share", ascending=False)
-            if county_rows.shape[0] > 0:
+            county_rows = self._leagues[league_name]["output_dataframe_map"].get((state, county))
+            if not county_rows is None and county_rows.shape[0] > 0:
                 group_cols = list(county_rows.columns.difference(["share"]))
                 county_rows = county_rows.groupby(group_cols, as_index=False).max().sort_values(by="share", ascending=False)
                 county_row = county_rows.iloc[0]
@@ -281,7 +261,7 @@ class LeaguesModel:
             leagues_table = ""  
             try:
                 for league in popup_leagues.keys():
-                    county_rows = self._leagues[league]["output_dataframe"].query(f"statefp == {statefp} & countyfp == {countyfp}")[["team_name", 'state', "share"]]
+                    county_rows = self._leagues[league]["output_dataframe_map"][(statefp, countyfp)][["team_name", 'state', "share"]]
                     county_rows = county_rows.groupby(['team_name', 'state'], as_index=False).max()
                     county_rows["league"] = league
                     all_county_rows = pd.concat([all_county_rows, county_rows], ignore_index=True)
@@ -384,7 +364,6 @@ class LeaguesModel:
 
         self.calculate_distances() 
         self.compute_shares()  
-        self.compute_output_dataframe()    
 
     def update_team(self, league_name: str, team_name: str, attrs: dict[str, object]):
         for i, team in enumerate(self._leagues[league_name]["teams"]):
@@ -392,7 +371,6 @@ class LeaguesModel:
                 self._leagues[league_name]["teams"][i] = team | attrs
         self.calculate_distances() 
         self.compute_shares()  
-        self.compute_output_dataframe()  
 
     def copy_with_just_league(self, league_name: str):
         leagues_model = LeaguesModel()
@@ -402,7 +380,7 @@ class LeaguesModel:
             league_name: {           
                 "weight": self._leagues[league_name]["weight"],
                 "teams":  self._leagues[league_name]["teams"].copy(),
-                "output_dataframe": self._leagues[league_name]["output_dataframe"]
+                "output_dataframe_map": self._leagues[league_name]["output_dataframe_map"]
             }
         }
         return leagues_model
