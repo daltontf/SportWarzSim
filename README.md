@@ -11,7 +11,8 @@ This project applies a mathematical model to U.S. counties to estimate the level
 - https://public.tableau.com/app/profile/matt.sorenson/viz/MLSFanMap/MLSMap
 
 These visualizations rely on Twitter followers, which often provide small sample sizes at the county level.
-Instead, this model estimates potential fan bases, removing a team only if its estimated support in a county falls below pure random choice (i.e., 1 / # of teams in the league).
+
+this model considers everyone a potential fan. There is a secondary value assigned to a county based on its distance from the venue that provide an multiplier to indicate the value the population of that county has to the team. A fan is a distant county is less likely to attend game(s) in person, but could buy a merchandise and other things. That multiply meet be 0.20 for a county 200 miles from the venue.
 
 The term “Warz” comes from a related idea: a strategy simulation game in which players attempt to maximize fan bases by investing in teams across leagues.
 

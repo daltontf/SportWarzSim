@@ -82,9 +82,8 @@ def opacity_for_population(population):
 
 def league_teams_sums(league_data) -> pd.DataFrame:
     league_df = league_data["output_dataframe"]
-    num_teams = len(league_data["teams"])
-    return league_df[league_df["share"].apply(lambda x: x > 1/num_teams)]\
-            [['team_name', 'share_population']]\
+    return league_df[league_df["share"].apply(lambda x: x > 0)]\
+            [['team_name', 'share_population', 'share_population_value']]\
             .groupby('team_name')\
             .sum()\
             .sort_values(by='share_population',ascending=False)
@@ -195,6 +194,8 @@ class LeaguesModel:
           
                 raw_shares =  expR / expR.sum(keepdims=True)
 
+                distance_value_multipliers = np.exp(-d / (league_weight * 1000)) # TODO? denominator vary per team based on N
+
                 # Another attempt at simulating "non-fandom"
                 # this one breaks down when leagues are small. A ten-team league could only get 90% share top.
                 # min_share = 1/len(raw_shares)
@@ -203,20 +204,21 @@ class LeaguesModel:
 
                 shares[i] = raw_shares
 
-            self._leagues[league]["shares"] = shares     
+            self._leagues[league]["shares"] = shares  
+            self._leagues[league]["share_value_multipliers"] = shares * distance_value_multipliers  
 
     def compute_output_dataframe(self):
         for league in self._leagues.keys(): 
-            d = self._leagues[league]["distances"]
-    
+            d = self._leagues[league]["distances"]    
             shares = self._leagues[league]["shares"]
+            share_value_multipliers = self._leagues[league]["share_value_multipliers"]
     
             dataframe_out = []
             for i, c in self._co_dataframe.iterrows():
                 for j, t in enumerate(self._leagues[league]["teams"]):
                     share = shares[i,j]
                     share_population = c["POPESTIMATE2020"] * share
-                    #if share > 0.001: # or share_population > 1000: # algoritm assumes everyone is a fan of some team in then
+                    share_population_value = share_population * share_value_multipliers[i,j]
                     dataframe_out.append({
                         "county": c["CTYNAME"],
                         "countyfp": c["COUNTY"],
@@ -225,6 +227,7 @@ class LeaguesModel:
                         "team_name": t["name"],
                         "color": t["color"],
                         "share_population": share_population,
+                        "share_population_value": share_population_value,
                         "effective_distance": d[i,j],
                         "share": share,
                     })
@@ -410,7 +413,10 @@ class LeaguesModel:
         merged = pd.merge(pre_sums, post_sums, on='team_name', how='outer', suffixes=("_before", "_after"))
         merged["share_population_before"] = merged["share_population_before"].fillna(0) 
         merged["share_population_after"] = merged["share_population_after"].fillna(0) 
+        merged["share_population_value_before"] = merged["share_population_value_before"].fillna(0) 
+        merged["share_population_value_after"] = merged["share_population_value_after"].fillna(0) 
         merged["share_population_delta"] = merged["share_population_after"] - merged["share_population_before"]
+        merged["share_population_value_delta"] = merged["share_population_value_after"] - merged["share_population_value_before"]
         print(merged)
-        print(f'Sums\t: {merged["share_population_before"].sum():,.0f}\t{merged["share_population_after"].sum():,.0f}')
-        print(f'Sum Delta = {(merged["share_population_after"].sum() - merged["share_population_before"].sum()):,.0f}') 
+        print(f'Population Values Sums\t: {merged["share_population_value_before"].sum():,.0f}\t{merged["share_population_value_after"].sum():,.0f}')
+        print(f'Population Values Sum Delta = {(merged["share_population_value_after"].sum() - merged["share_population_value_before"].sum()):,.0f}')        
