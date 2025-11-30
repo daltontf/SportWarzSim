@@ -34,10 +34,10 @@
   {"name":"Toronto Blue Jays","venue":"Rogers Centre","L":6.5,"S":0.0,"coordinates":{"lat":43.641444,"lon":-79.389417},"color":"#134A8E","state":"Ontario","eh":"Y"},
   {"name":"Washington Nationals","venue":"Nationals Park","L":6.0,"S":0.0,"coordinates":{"lat":38.873055,"lon":-77.007996},"color":"#AB0003","state":"District of Columbia"},
 
-  {"name":"St. Louis Cardinals","venue":"AA Team","L":1.0,"S":-0.1,"coordinates":{"lat":37.211653846250464,"lon":-93.27938832930909},"color":"#C41E3A","state":"Missouri"},
-  {"name":"St. Louis Cardinals","venue":"AAA Team","L":1.0,"S":-0.1,"coordinates":{"lat":35.14298543406518,"lon":-90.0493010299043},"color":"#C41E3A","state":"Tennesee"},
+  {"name":"St. Louis Cardinals","venue":"AA Team","L":0.25,"S":0.0,"coordinates":{"lat":37.211653846250464,"lon":-93.27938832930909},"color":"#C41E3A","state":"Missouri"},
+  {"name":"St. Louis Cardinals","venue":"AAA Team","L":0.25,"S":0.0,"coordinates":{"lat":35.14298543406518,"lon":-90.0493010299043},"color":"#C41E3A","state":"Tennesee"},
 
-  {"name":"Chicago Cubs","venue":"AAA Team","L":2.0,"S":0.1,"coordinates":{"lat":41.58024430223626,"lon":-93.6159367915304435},"color":"#0E3386","state":"Iowa"}
+  {"name":"Chicago Cubs","venue":"AAA Team","L":0.5,"S":0.0,"coordinates":{"lat":41.58024430223626,"lon":-93.6159367915304435},"color":"#0E3386","state":"Iowa"}
 
 ]
 }

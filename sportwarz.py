@@ -95,6 +95,11 @@ class LeaguesModel:
     _geojson_layer: GeoJSON = None
     _leaflet_map: Map = None
 
+    competition_temperature_base = 1 # Lower -> winner takes it
+    not_nearest_multiplier = 2 # added to distance multiplied (d - nearest_d) 
+    not_same_state_multiplier = 2
+    canada_multiplier = 2 
+
     last_click_lat = 37.7
     last_click_lon = -97.3  
     last_click_state: str = "Kansas"
@@ -144,10 +149,6 @@ class LeaguesModel:
             self._leagues[league]["distances"] = d  
 
     def compute_shares(self):
-        competition_temperature_base = 1 # Lower -> winner takes it
-        not_nearest_multiplier = 2 # added to distance multiplied (d - nearest_d) 
-        not_same_state_multiplier = 2.5
-        canada_multiplier = 2 
         nearest_key = "nearest"
     
         for league in self._leagues.keys(): 
@@ -168,32 +169,31 @@ class LeaguesModel:
                 nearest_effective_d = 1000000
                 county_state = c["STNAME"]
                 R = np.zeros_like(d[i])
+                distance_value_multipliers = np.zeros_like(d[i])
                 for j, t in enumerate(self._leagues[league]["teams"]):
                     effective_d = d[i,j]
                     N = t.get("N", 5.0)
                     if not pd.isna(nearest_d) and effective_d > nearest_d:
-                        effective_d = nearest_d + ((effective_d - nearest_d) * not_nearest_multiplier)
+                        effective_d = nearest_d + ((effective_d - nearest_d) * self.not_nearest_multiplier)
                     team_state = t["state"] 
                     if isinstance(team_state, list):
                         if not county_state in team_state:
-                            effective_d *= not_same_state_multiplier 
+                            effective_d *= self.not_same_state_multiplier 
                     elif county_state != team_state:
-                        effective_d *= not_same_state_multiplier 
+                        effective_d *= self.not_same_state_multiplier 
                         if "eh" in t:
-                            effective_d *= canada_multiplier     
+                            effective_d *= self.canada_multiplier     
                     if effective_d < nearest_effective_d:
                         nearest_effective_d = effective_d 
                     team_distance_decay = league_distance_decay * (5/N)
                     D = np.exp(-team_distance_decay * min(effective_d, 15000/N))
                     DS = np.exp(-team_distance_decay * effective_d * 2)  #short term enthusiasm dissipates faster             
                     R[j] = ((league_weight * 10) + t["L"]  * D)  + ((league_weight * 10) + t["S"] * DS)   
+                    distance_value_multipliers[j] = np.exp(-min(effective_d, 500) / 200) * league_weight
 
-                #competition_temperature = np.log10((5 + d.min()) / 5) + competition_temperature_base
-                expR = np.exp(R / competition_temperature_base)
+                expR = np.exp(R / self.competition_temperature_base)
           
                 raw_shares =  expR / expR.sum(keepdims=True)
-
-                distance_value_multipliers = np.exp(-d[i] / (league_weight * 1000)) # TODO? denominator vary per team based on N
 
                 dataframe_out = []
                 for j, t in enumerate(self._leagues[league]["teams"]):
@@ -232,7 +232,7 @@ class LeaguesModel:
             county_rows = self._leagues[league_name]["output_dataframe_map"].get((state, county))
             if not county_rows is None and county_rows.shape[0] > 0:
                 group_cols = list(county_rows.columns.difference(["share"]))
-                county_rows = county_rows.groupby(group_cols, as_index=False).max().sort_values(by="share", ascending=False)
+                county_rows = county_rows.groupby(group_cols, as_index=False).sum().sort_values(by="share", ascending=False)
                 county_row = county_rows.iloc[0]
                 if county_row["share"] > share_threshold:   
                     feature["properties"]["style"] = {
@@ -261,8 +261,8 @@ class LeaguesModel:
             leagues_table = ""  
             try:
                 for league in popup_leagues.keys():
-                    county_rows = self._leagues[league]["output_dataframe_map"][(statefp, countyfp)][["team_name", 'state', "share"]]
-                    county_rows = county_rows.groupby(['team_name', 'state'], as_index=False).max()
+                    county_rows = self._leagues[league]["output_dataframe_map"][(statefp, countyfp)][["team_name", 'state', "share_population_value", "share"]]
+                    county_rows = county_rows.groupby(['team_name', 'state'], as_index=False).sum() 
                     county_rows["league"] = league
                     all_county_rows = pd.concat([all_county_rows, county_rows], ignore_index=True)
       
@@ -276,6 +276,7 @@ class LeaguesModel:
                         f"<td>{county_row['league']}</td>" 
                         f"<td>{county_row['team_name']}</td>" 
                         f"<td>{round(county_row['share'] * 100, 1)}%</td>" 
+                        f"<td>{county_row['share_population_value']:,.0f}</td>" 
                         "</tr>")
        
                 self.last_click_lat = centroid.y
@@ -357,20 +358,22 @@ class LeaguesModel:
         self._leaflet_map.add(layer)   
         self._geojson_layer = layer   
 
-    def add_teams(self, league_name: str, new_teams: list[Team]):
+    def add_teams(self, league_name: str, new_teams: list[Team], recalculate=True):
         self.delete_teams(league_name, list(map(lambda team: team["name"], new_teams)))
         
         self._leagues[league_name]["teams"].extend(new_teams)
 
-        self.calculate_distances() 
-        self.compute_shares()  
+        if recalculate:
+            self.calculate_distances() 
+            self.compute_shares()  
 
-    def update_team(self, league_name: str, team_name: str, attrs: dict[str, object]):
+    def update_team(self, league_name: str, team_name: str, attrs: dict[str, object], recalculate=True):
         for i, team in enumerate(self._leagues[league_name]["teams"]):
             if team["name"] == team_name:
                 self._leagues[league_name]["teams"][i] = team | attrs
-        self.calculate_distances() 
-        self.compute_shares()  
+        if recalculate:
+            self.calculate_distances() 
+            self.compute_shares()  
 
     def copy_with_just_league(self, league_name: str):
         leagues_model = LeaguesModel()
@@ -386,6 +389,10 @@ class LeaguesModel:
         return leagues_model
 
     def show_pre_post_merged_results(self, league_name:str, after_model: Leagues):
+        pd.set_option('display.float_format', lambda x: '%.0f' % x)
+        pd.set_option('display.max_rows', 256)
+        pd.set_option('display.width', 256)
+
         pre_sums = league_teams_sums(self._leagues[league_name])
         post_sums = league_teams_sums(after_model._leagues[league_name])
         merged = pd.merge(pre_sums, post_sums, on='team_name', how='outer', suffixes=("_before", "_after"))
