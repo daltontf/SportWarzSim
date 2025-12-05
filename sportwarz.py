@@ -61,22 +61,22 @@ def haversine_miles(centroid, lat2, lon2):
     a = np.sin(dphi/2.0)**2 + np.cos(phi1)*np.cos(phi2)*np.sin(dlambda/2.0)**2
     return 2*r*np.arcsin(np.sqrt(a))
 
-def opacity_for_population(population): 
-    if population > 5000000:
+def opacity_for_population(share_population_value): 
+    if share_population_value > 5000000:
         return 0.9
-    if population > 1000000:
+    if share_population_value > 1000000:
         return 0.8
-    if population > 500000:
+    if share_population_value > 500000:
         return 0.7  
-    if population > 100000:
+    if share_population_value > 100000:
         return 0.6 
-    if population > 50000:
+    if share_population_value > 50000:
         return 0.5
-    if population > 10000:
+    if share_population_value > 10000:
         return 0.4
-    if population > 5000:
+    if share_population_value > 5000:
         return 0.3
-    if population > 1000:
+    if share_population_value > 1000:
         return 0.2
     return 0.1    
 
@@ -224,22 +224,22 @@ class LeaguesModel:
         for feature in self._counties_geojson["features"]:
             feature["properties"]["style"] = default_style    
 
-    def heatmap_counties(self, league_name: str, share_threshold = 0.05): 
+    def heatmap_counties(self, league_name: str, share_threshold = 0.01): 
         self.reset_county_styles()
         for feature in self._counties_geojson["features"]:
             state = feature["properties"]["STATEFP"]
             county = feature["properties"]["COUNTYFP"]
             county_rows = self._leagues[league_name]["output_dataframe_map"].get((state, county))
             if not county_rows is None and county_rows.shape[0] > 0:
-                group_cols = list(county_rows.columns.difference(["share"]))
-                county_rows = county_rows.groupby(group_cols, as_index=False).sum().sort_values(by="share", ascending=False)
+                group_cols = list(county_rows.columns.difference(["share_population_value"]))
+                county_rows = county_rows.groupby(group_cols, as_index=False).max().sort_values(by="share_population_value", ascending=False)
                 county_row = county_rows.iloc[0]
                 if county_row["share"] > share_threshold:   
                     feature["properties"]["style"] = {
                     "color": "grey",
                     "weight": 1,
                     "fillColor": county_row["color"] ,
-                    "fillOpacity": opacity_for_population(county_row["share_population"])
+                    "fillOpacity": opacity_for_population(county_row["share_population_value"])
                     }               
             #    elif isinstance(team_color_map, str):
             #        feature["properties"]["style"] = {
@@ -268,14 +268,13 @@ class LeaguesModel:
       
                 if all_county_rows.empty:
                     return
-                all_county_rows = all_county_rows.sort_values(by="share", ascending=False)
+                all_county_rows = all_county_rows.sort_values(by="share_population_value", ascending=False)
                 for i, county_row in all_county_rows.iterrows():
                     if county_row["share"] > 1/len(self._leagues[league]["teams"]):
                         leagues_table += (
                         "<tr>"  
                         f"<td>{county_row['league']}</td>" 
                         f"<td>{county_row['team_name']}</td>" 
-                        f"<td>{round(county_row['share'] * 100, 1)}%</td>" 
                         f"<td>{county_row['share_population_value']:,.0f}</td>" 
                         "</tr>")
        
