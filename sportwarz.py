@@ -401,6 +401,7 @@ class LeaguesModel:
         merged["share_population_value_after"] = merged["share_population_value_after"].fillna(0) 
         merged["share_population_delta"] = merged["share_population_after"] - merged["share_population_before"]
         merged["share_population_value_delta"] = merged["share_population_value_after"] - merged["share_population_value_before"]
-        print(merged)
-        print(f'Population Values Sums\t: {merged["share_population_value_before"].sum():,.0f}\t{merged["share_population_value_after"].sum():,.0f}')
-        print(f'Population Values Sum Delta = {(merged["share_population_value_after"].sum() - merged["share_population_value_before"].sum()):,.0f}')        
+        
+        total = merged.agg(['sum']).rename(index={'sum': 'Total'})
+ 
+        return pd.concat([merged, total])

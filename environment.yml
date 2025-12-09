@@ -10,6 +10,7 @@ dependencies:
   - ipyleaflet
   - shapely
   - pip
+  - itables
   - pip:
     - --editable
     - ./local_module
