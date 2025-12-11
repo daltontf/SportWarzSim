@@ -3,6 +3,7 @@ import shapely
 import numpy as np
 import pandas as pd
 import ipywidgets as widgets
+import itables
 
 from typing import TypedDict, Union, Dict, NewType
 from IPython.display import display
@@ -284,7 +285,7 @@ class LeaguesModel:
 
                 popup = Popup(location=(centroid.y, centroid.x), 
                     child=widgets.HTML("<table border='1' style='border-collapse: collapse'>" +
-                    f'<caption>{feature["properties"]["Name"]} - {population}</caption>' +    
+                    f'<caption>{feature["properties"]["Name"]} - {population:,.0f}</caption>' +    
                     leagues_table +
                 "</table>"  
                 ))
@@ -404,4 +405,7 @@ class LeaguesModel:
         
         total = merged.agg(['sum']).rename(index={'sum': 'Total'})
  
-        return pd.concat([merged, total])
+        full = pd.concat([merged, total])
+
+        with pd.option_context("display.float_format", "{:,.0f}".format):
+            return itables.show(full, paging=False, pageLength=100 )
