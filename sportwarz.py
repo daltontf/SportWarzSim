@@ -181,7 +181,6 @@ class LeaguesModel:
                 distance_value_multipliers = np.zeros_like(d[i])
                 for j, t in enumerate(self._leagues[league]["teams"]):
                     effective_d = d[i][j]
-                    N = t.get("N", 5.0)
                     if not pd.isna(nearest_d) and effective_d > nearest_d:
                         effective_d = nearest_d + ((effective_d - nearest_d) * self.not_nearest_multiplier)
                     team_state = t["state"] 
@@ -194,6 +193,7 @@ class LeaguesModel:
                             effective_d *= self.canada_multiplier     
                     if effective_d < nearest_effective_d:
                         nearest_effective_d = effective_d 
+                    N = t.get("N", 5.0)
                     team_distance_decay = league_distance_decay * (5/N)
                     D = np.exp(-team_distance_decay * min(effective_d, 15000/N))
                     DS = np.exp(-team_distance_decay * effective_d * 2)  #short term enthusiasm dissipates faster             
@@ -202,11 +202,11 @@ class LeaguesModel:
 
                 expR = np.exp(R / self.competition_temperature_base)
           
-                raw_shares =  expR / expR.sum(keepdims=True)
+                shares = expR / expR.sum(keepdims=True)
 
                 dataframe_out = []
                 for j, t in enumerate(self._leagues[league]["teams"]):
-                    share_population = c["POPESTIMATE2020"] * raw_shares[j]
+                    share_population = c["POPESTIMATE2020"] * shares[j]
                     income_rel = c["income"] / self._us_median_income
                     income_mult = income_rel / (income_rel + 0.75)
                     share_population_value = share_population\
@@ -217,7 +217,7 @@ class LeaguesModel:
                         "state": c["STNAME"],
                         "team_name": t["name"],
                         "color": t["color"],
-                        "share": raw_shares[j],
+                        "share": shares[j],
                         "share_population": share_population,
                         "share_population_value": share_population_value
                     })
@@ -249,18 +249,11 @@ class LeaguesModel:
                 county_row = county_rows.nlargest(1, "share_population_value").iloc[0]
                 if county_row["share"] > share_threshold:   
                     feature["properties"]["style"] = {
-                    "color": "grey",
-                    "weight": 1,
-                    "fillColor": county_row["color"] ,
-                    "fillOpacity": opacity_for_population(county_row["share_population_value"])
+                        "color": "grey",
+                        "weight": 1,
+                        "fillColor": county_row["color"] ,
+                        "fillOpacity": opacity_for_population(county_row["share_population_value"])
                     }               
-            #    elif isinstance(team_color_map, str):
-            #        feature["properties"]["style"] = {
-            #         "color": "grey",
-            #         "weight": 1,
-            #         "fillColor": team_color_map,
-            #         "fillOpacity": opacity_for_population(county_row["population"])
-            #        }    
     
     def create_show_teams(self, leaflet_map:Map, popup_leagues:Leagues):
         def show_teams(event, feature, **kwargs): 

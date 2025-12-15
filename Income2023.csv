@@ -320,14 +320,14 @@ FIPS_Code,State,Area_Name,Median_Household_Income_2022
 08123,CO,"Weld County, CO",90770
 08125,CO,"Yuma County, CO",56075
 09000,CT,Connecticut,88182
-09001,CT,"Fairfield County, CT",
-09003,CT,"Hartford County, CT",
-09005,CT,"Litchfield County, CT",
-09007,CT,"Middlesex County, CT",
-09009,CT,"New Haven County, CT",
-09011,CT,"New London County, CT",
-09013,CT,"Tolland County, CT",
-09015,CT,"Windham County, CT",
+09001,CT,"Fairfield County, CT",95645
+09003,CT,"Hartford County, CT",75148
+09005,CT,"Litchfield County, CT",79906
+09007,CT,"Middlesex County, CT",85898
+09009,CT,"New Haven County, CT",69905
+09011,CT,"New London County, CT",73490
+09013,CT,"Tolland County, CT",87069
+09015,CT,"Windham County, CT",66550
 09110,CT,"Capitol Planning Region, CT",84551
 09120,CT,"Greater Bridgeport Planning Region, CT",81042
 09130,CT,"Lower Connecticut River Valley Planning Region, CT",99557
