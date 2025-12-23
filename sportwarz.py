@@ -135,6 +135,15 @@ class LeaguesModel:
                 print(e)
                 print("Invalid coordinates:", feature["properties"]["Name"])  
 
+    def read_league(self, league_name: str):
+        with open(f"./teams_{league_name}.json") as f:
+            return f.read()
+
+    def load_league(self, league_dict)-> str:
+        league_name = league_dict["league_name"]
+        self._leagues[league_name] = league_dict  
+        return league_name                            
+
     def load_leagues(self, league_names: list[str]):
      for league in league_names:
          with open(f"./teams_{league}.json") as f:
@@ -143,76 +152,77 @@ class LeaguesModel:
     def add_league(self, league_data:League):
         self._leagues = { league_data["league_name"]: league_data }
 
-    def calculate_distances(self):
-        for league in self._leagues.keys():
-            teams = self._leagues[league]["teams"]
-
-            # compute distance matrix
-            d = { }
-            for i, c in self._co_dataframe.iterrows():
-                d[i] = np.zeros(len(teams))
-                if not pd.isna(c["centroid"]):
-                    for j, t in enumerate(teams):
-                        d[i][j] = haversine_miles(c["centroid"], t["coordinates"]["lat"], t["coordinates"]["lon"])
+    def calculate_league_distances(self, league_name):
+        teams = self._leagues[league_name]["teams"]
+        # compute distance matrix
+        d = { }
+        for i, c in self._co_dataframe.iterrows():
+            d[i] = np.zeros(len(teams))
+            if not pd.isna(c["centroid"]):
+                for j, t in enumerate(teams):
+                    d[i][j] = haversine_miles(c["centroid"], t["coordinates"]["lat"], t["coordinates"]["lon"])
  
-            self._leagues[league]["distances"] = d  
+        self._leagues[league_name]["distances"] = d       
 
-    def compute_shares(self):
+    def calculate_distances(self):
+        for league_name in self._leagues.keys():
+            self.calculate_league_distances(league_name) 
+
+    def compute_league_shares(self, league):
         nearest_key = "nearest"
-    
-        for league in self._leagues.keys(): 
-            d = self._leagues[league]["distances"] 
-            league_weight = self._leagues[league]["weight"]
-            league_distance_decay = .002 / league_weight 
 
-            self._co_dataframe[nearest_key] = float('nan')
+        d = self._leagues[league]["distances"] 
+        league_weight = self._leagues[league]["weight"]
+        league_distance_decay = .002 / league_weight 
+
+        self._co_dataframe[nearest_key] = float('nan')
+        for j, t in enumerate(self._leagues[league]["teams"]):
+            for i, c in self._co_dataframe.iterrows():    
+                nearest = self._co_dataframe.loc[i, nearest_key]
+                if pd.isna(nearest) or d[i][j] < nearest:
+                    self._co_dataframe.loc[i, nearest_key] = d[i][j] 
+
+        dataframe_map = { }
+        for i, c in self._co_dataframe.iterrows():            
+            nearest_d = c[nearest_key]
+            nearest_effective_d = 1000000
+            county_state = c["STNAME"]
+            R = np.zeros_like(d[i])
+            distance_value_multipliers = np.zeros_like(d[i])
             for j, t in enumerate(self._leagues[league]["teams"]):
-                for i, c in self._co_dataframe.iterrows():    
-                    nearest = self._co_dataframe.loc[i, nearest_key]
-                    if pd.isna(nearest) or d[i][j] < nearest:
-                        self._co_dataframe.loc[i, nearest_key] = d[i][j] 
-
-            dataframe_map = { }
-            for i, c in self._co_dataframe.iterrows():            
-                nearest_d = c[nearest_key]
-                nearest_effective_d = 1000000
-                county_state = c["STNAME"]
-                R = np.zeros_like(d[i])
-                distance_value_multipliers = np.zeros_like(d[i])
-                for j, t in enumerate(self._leagues[league]["teams"]):
-                    effective_d = d[i][j]
-                    if not pd.isna(nearest_d) and effective_d > nearest_d:
-                        effective_d = nearest_d + ((effective_d - nearest_d) * self.not_nearest_multiplier)
-                    team_state = t["state"] 
-                    if isinstance(team_state, list):
-                        if not county_state in team_state:
-                            effective_d *= self.not_same_state_multiplier 
-                    elif county_state != team_state:
+                effective_d = d[i][j]
+                if not pd.isna(nearest_d) and effective_d > nearest_d:
+                    effective_d = nearest_d + ((effective_d - nearest_d) * self.not_nearest_multiplier)
+                team_state = t["state"] 
+                if isinstance(team_state, list):
+                    if not county_state in team_state:
                         effective_d *= self.not_same_state_multiplier 
-                        if "eh" in t:
-                            effective_d *= self.canada_multiplier     
-                    if effective_d < nearest_effective_d:
-                        nearest_effective_d = effective_d 
-                    N = t.get("N", 5.0)
-                    team_distance_decay = league_distance_decay * (5/N)
-                    D = np.exp(-team_distance_decay * min(effective_d, 15000/N))
-                    DS = np.exp(-team_distance_decay * effective_d * 2)  #short term enthusiasm dissipates faster             
-                    R[j] = ((league_weight * 10) + t["L"]  * D)  + ((league_weight * 10) + t["S"] * DS)   
-                    distance_value_multipliers[j] = np.exp(-min(effective_d, 500) / 200) * league_weight
+                elif county_state != team_state:
+                    effective_d *= self.not_same_state_multiplier 
+                    if "eh" in t:
+                        effective_d *= self.canada_multiplier     
+                if effective_d < nearest_effective_d:
+                    nearest_effective_d = effective_d 
+                N = t.get("N", 5.0)
+                team_distance_decay = league_distance_decay * (5/N)
+                D = np.exp(-team_distance_decay * min(effective_d, 15000/N))
+                DS = np.exp(-team_distance_decay * effective_d * 2)  #short term enthusiasm dissipates faster             
+                R[j] = ((league_weight * 10) + t["L"]  * D)  + ((league_weight * 10) + t["S"] * DS)   
+                distance_value_multipliers[j] = np.exp(-min(effective_d, 500) / 200) * league_weight
 
-                expR = np.exp(R / self.competition_temperature_base)
+            expR = np.exp(R / self.competition_temperature_base)
           
-                shares = expR / expR.sum(keepdims=True)
+            shares = expR / expR.sum(keepdims=True)
 
-                dataframe_out = []
-                for j, t in enumerate(self._leagues[league]["teams"]):
-                    share_population = c["POPESTIMATE2020"] * shares[j]
-                    income_rel = c["income"] / self._us_median_income
-                    income_mult = income_rel / (income_rel + 0.75)
-                    share_population_value = share_population\
-                        * distance_value_multipliers[j]\
-                        * income_mult
-                    dataframe_out.append({
+            dataframe_out = []
+            for j, t in enumerate(self._leagues[league]["teams"]):
+                share_population = c["POPESTIMATE2020"] * shares[j]
+                income_rel = c["income"] / self._us_median_income
+                income_mult = income_rel / (income_rel + 0.75)
+                share_population_value = share_population\
+                    * distance_value_multipliers[j]\
+                    * income_mult
+                dataframe_out.append({
                         "county": c["CTYNAME"],
                         "state": c["STNAME"],
                         "team_name": t["name"],
@@ -220,11 +230,16 @@ class LeaguesModel:
                         "share": shares[j],
                         "share_population": share_population,
                         "share_population_value": share_population_value
-                    })
-        
-                dataframe_map[c.name] = pd.DataFrame(dataframe_out)
+                })
+       
+            dataframe_map[c.name] = pd.DataFrame(dataframe_out)
 
-            self._leagues[league]["output_dataframe_map"] = dataframe_map          
+        self._leagues[league]["output_dataframe_map"] = dataframe_map
+      
+    def compute_shares(self):   
+        for league in self._leagues.keys(): 
+            self.compute_league_shares(league)
+                      
 
     def reset_county_styles(self):
         default_style = {

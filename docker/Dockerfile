@@ -13,6 +13,8 @@ RUN pip install ipywidgets
 RUN pip install ipyleaflet
 RUN pip install voila
 RUN pip install itables
+RUN pip install panel
+RUN pip install ipywidgets_bokeh
 
 # Make port 8888 available to the world outside this container
 EXPOSE 8866
