@@ -91,7 +91,7 @@ def league_teams_sums(league_data) -> pd.DataFrame:
 class LeaguesModel:
     _counties_geojson: CountiesGEOJson
     _leagues: Leagues = { }
-    _co_dataframe: pd.DataFrame  
+    _county_dataframe: pd.DataFrame  
     _us_median_income: float
 
     _geojson_layer: GeoJSON = None
@@ -111,7 +111,7 @@ class LeaguesModel:
             self._counties_geojson =  json.load(f)
         
     def load_counties_data(self):
-        self._co_dataframe = pd.read_csv("./co-est2024-alldata.csv", index_col=["STATE", "COUNTY"], encoding="iso-8859-1")
+        self._county_dataframe = pd.read_csv("./co-est2024-alldata.csv", index_col=["STATE", "COUNTY"], encoding="iso-8859-1")
 
         co_income_dataframe = pd.read_csv("./Income2023.csv", index_col="FIPS_Code")
 
@@ -128,9 +128,9 @@ class LeaguesModel:
                 raw_polygon = shapely.geometry.Polygon(coords) 
                 state = feature["properties"]["STATEFP"]
                 county = feature["properties"]["COUNTYFP"]
-                self._co_dataframe.at[(state, county), "centroid"] = raw_polygon.centroid
+                self._county_dataframe.at[(state, county), "centroid"] = raw_polygon.centroid
                 fips = int(f"{state:02d}{county:03d}")
-                self._co_dataframe.at[(state, county), "income"] = co_income_dataframe.at[fips, "Median_Household_Income_2022"]
+                self._county_dataframe.at[(state, county), "income"] = co_income_dataframe.at[fips, "Median_Household_Income_2022"]
             except Exception as e:
                 print(e)
                 print("Invalid coordinates:", feature["properties"]["Name"])  
@@ -156,8 +156,9 @@ class LeaguesModel:
         teams = self._leagues[league_name]["teams"]
         # compute distance matrix
         d = { }
-        for i, c in self._co_dataframe.iterrows():
+        for i in range(len(self._county_dataframe)):
             d[i] = np.zeros(len(teams))
+            c = self._county_dataframe.iloc[i]     
             if not pd.isna(c["centroid"]):
                 for j, t in enumerate(teams):
                     d[i][j] = haversine_miles(c["centroid"], t["coordinates"]["lat"], t["coordinates"]["lon"])
@@ -171,27 +172,28 @@ class LeaguesModel:
     def compute_league_shares(self, league):
         nearest_key = "nearest"
 
-        d = self._leagues[league]["distances"] 
         league_weight = self._leagues[league]["weight"]
         league_distance_decay = .002 / league_weight 
 
-        self._co_dataframe[nearest_key] = float('nan')
-        for j, t in enumerate(self._leagues[league]["teams"]):
-            for i, c in self._co_dataframe.iterrows():    
-                nearest = self._co_dataframe.loc[i, nearest_key]
-                if pd.isna(nearest) or d[i][j] < nearest:
-                    self._co_dataframe.loc[i, nearest_key] = d[i][j] 
+        d = self._leagues[league]["distances"] 
+        d_array = np.array(list(d.values()))
+        self._county_dataframe[nearest_key] = d_array.min(axis=1)
 
+        dataframe_out = []
         dataframe_map = { }
-        for i, c in self._co_dataframe.iterrows():            
+        for i in range(len(self._county_dataframe)):
+            c = self._county_dataframe.iloc[i]           
             nearest_d = c[nearest_key]
             nearest_effective_d = 1000000
             county_state = c["STNAME"]
             R = np.zeros_like(d[i])
+            expR = np.zeros_like(d[i])
+            shares = np.zeros_like(d[i])
+
             distance_value_multipliers = np.zeros_like(d[i])
             for j, t in enumerate(self._leagues[league]["teams"]):
                 effective_d = d[i][j]
-                if not pd.isna(nearest_d) and effective_d > nearest_d:
+                if effective_d > nearest_d:
                     effective_d = nearest_d + ((effective_d - nearest_d) * self.not_nearest_multiplier)
                 team_state = t["state"] 
                 if isinstance(team_state, list):
@@ -215,7 +217,7 @@ class LeaguesModel:
             shares = expR / expR.sum(keepdims=True)
 
             dataframe_out = []
-            for j, t in enumerate(self._leagues[league]["teams"]):
+            for j, t in enumerate(self._leagues[league]["teams"]):                
                 share_population = c["POPESTIMATE2020"] * shares[j]
                 income_rel = c["income"] / self._us_median_income
                 income_mult = income_rel / (income_rel + 0.75)
@@ -259,9 +261,10 @@ class LeaguesModel:
             county = feature["properties"]["COUNTYFP"]
             county_rows = self._leagues[league_name]["output_dataframe_map"].get((state, county))
             if not county_rows is None and county_rows.shape[0] > 0:
-                group_cols = list(county_rows.columns.difference(["share_population_value"]))
-                county_rows = county_rows.groupby(group_cols, as_index=False).max()
-                county_row = county_rows.nlargest(1, "share_population_value").iloc[0]
+                # group_cols = list(county_rows.columns.difference(["share_population_value"]))
+                # county_rows = county_rows.groupby(group_cols, as_index=False).max()
+                # county_row = county_rows.nlargest(1, "share_population_value").iloc[0]
+                county_row = county_rows.loc[county_rows["share_population_value"].idxmax()]
                 if county_row["share"] > share_threshold:   
                     feature["properties"]["style"] = {
                         "color": "grey",
@@ -274,7 +277,7 @@ class LeaguesModel:
         def show_teams(event, feature, **kwargs): 
             statefp = feature["properties"]["STATEFP"]
             countyfp = feature["properties"]["COUNTYFP"]
-            row = self._co_dataframe.query(f"STATE == {statefp} & COUNTY == {countyfp}") 
+            row = self._county_dataframe.query(f"STATE == {statefp} & COUNTY == {countyfp}") 
             centroid = row["centroid"].iloc[0]
             population = row["POPESTIMATE2020"].iloc[0]
 
@@ -329,7 +332,9 @@ class LeaguesModel:
                 border: 2px solid black;
             }
             .leaflet-popup-content {
-                color: white;
+               color: white;
+               max-height: 350px;  
+               overflow-y: auto; 
             }
             
             table {
@@ -405,7 +410,7 @@ class LeaguesModel:
 
     def copy_with_just_league(self, league_name: str):
         leagues_model = LeaguesModel()
-        leagues_model._co_dataframe = self._co_dataframe
+        leagues_model._county_dataframe = self._county_dataframe
         leagues_model._us_median_income = self._us_median_income
         leagues_model.load_counties_geojson()
         leagues_model._leagues =  { 
