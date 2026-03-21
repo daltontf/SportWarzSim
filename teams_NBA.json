@@ -5,7 +5,7 @@
 [
   {"name":"Atlanta Hawks","venue":"State Farm Arena","L":5.0,"S":0.0,"coordinates":{"lat":33.757290,"lon":-84.397331},"color":"#E03A3E","state":"Georgia"},
   {"name":"Boston Celtics","venue":"TD Garden","N":8.5,"L":8.0,"S":0.0,"coordinates":{"lat":42.366303,"lon":-71.062228},"color":"#007A33","state":"Massachusetts"},
-  {"name":"Brooklyn Nets","venue":"Barclays Center","L":5.0,"S":0.0,"coordinates":{"lat":40.682650,"lon":-73.974689},"color":"#000000","state":"New York"},
+  {"name":"Brooklyn Nets","venue":"Barclays Center","L":8.0,"S":0.0,"coordinates":{"lat":40.682650,"lon":-73.974689},"color":"#000000","state":"New York"},
   {"name":"Charlotte Hornets","venue":"Spectrum Center","L":5.0,"S":0.0,"coordinates":{"lat":35.225000,"lon":-80.839167},"color":"#1D1160","state":"North Carolina"},
   {"name":"Chicago Bulls","venue":"United Center","N":6.0,"L":8.0,"S":0.0,"coordinates":{"lat":41.880556,"lon":-87.674167},"color":"#CE1141","state":"Illinois"},
   {"name":"Cleveland Cavaliers","venue":"Rocket Mortgage FieldHouse","L":5.0,"S":0.0,"coordinates":{"lat":41.496389,"lon":-81.688056},"color":"#000000","state":"Ohio"},
@@ -15,7 +15,7 @@
   {"name":"Golden State Warriors","venue":"Chase Center","N":8.5,"L":6.0,"S":2.0,"coordinates":{"lat":37.767000,"lon":-122.387000},"color":"#1D428A","state":"California"},
   {"name":"Houston Rockets","venue":"Toyota Center","L":5.0,"S":0.0,"coordinates":{"lat":29.750833,"lon":-95.362222},"color":"#CE1141","state":"Texas"},
   {"name":"Indiana Pacers","venue":"Gainbridge Fieldhouse","L":5.0,"S":0.0,"coordinates":{"lat":39.763889,"lon":-86.155556},"color":"#002D62","state":"Indiana"},
-  {"name":"Los Angeles Clippers","venue":"Intuit Dome","L":4.0,"S":0.0,"coordinates":{"lat":33.958111,"lon":-118.341667},"color":"#C8102E","state":"California"},
+  {"name":"Los Angeles Clippers","venue":"Intuit Dome","L":7.5,"S":0.0,"coordinates":{"lat":33.958111,"lon":-118.341667},"color":"#C8102E","state":"California"},
   {"name":"Los Angeles Lakers","venue":"Crypto.com Arena","N":8.5,"L":9.0,"S":0.0,"coordinates":{"lat":34.043017,"lon":-118.267254},"color":"#552583","state":"California"},
   {"name":"Memphis Grizzlies","venue":"FedExForum","L":4.0,"S":0.0,"coordinates":{"lat":35.138214,"lon":-90.050103},"color":"#5D76A9","state":"Tennessee"},
   {"name":"Miami Heat","venue":"Kaseya Center","N":7.5,"L":7.0,"S":0.0,"coordinates":{"lat":25.781389,"lon":-80.188056},"color":"#98002E","state":"Florida"},

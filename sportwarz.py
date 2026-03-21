@@ -56,7 +56,8 @@ def haversine_miles(centroid, lat2, lon2):
     r = 3958.8  # earth radius miles
     lat1 = centroid.y
     lon1 = centroid.x
-    phi1 = np.radians(lat1); phi2 = np.radians(lat2)
+    phi1 = np.radians(lat1)
+    phi2 = np.radians(lat2)
     dphi = phi2 - phi1
     dlambda = np.radians(lon2 - lon1)
     a = np.sin(dphi/2.0)**2 + np.cos(phi1)*np.cos(phi2)*np.sin(dlambda/2.0)**2
@@ -97,14 +98,10 @@ class LeaguesModel:
     _geojson_layer: GeoJSON = None
     _leaflet_map: Map = None
 
-    competition_temperature_base = 1 # Lower -> winner takes it
-    not_nearest_multiplier = 2 # added to distance multiplied (d - nearest_d) 
-    not_same_state_multiplier = 2
-    canada_multiplier = 2 
-
-    last_click_lat = 37.7
-    last_click_lon = -97.3  
-    last_click_state: str = "Kansas"
+    competition_temperature_base : float = 1 # Lower -> winner takes it
+    not_nearest_multiplier : float = 2 # added to distance multiplied (d - nearest_d) 
+    not_same_state_multiplier : float = 2
+    canada_multiplier : float = 2 
 
     def load_counties_geojson(self):
         with open("./counties.geojson") as f:
@@ -113,9 +110,9 @@ class LeaguesModel:
     def load_counties_data(self):
         self._county_dataframe = pd.read_csv("./co-est2024-alldata.csv", index_col=["STATE", "COUNTY"], encoding="iso-8859-1")
 
-        co_income_dataframe = pd.read_csv("./Income2023.csv", index_col="FIPS_Code")
+        co_income_dataframe: pd.DataFrame = pd.read_csv("./Income2023.csv", index_col="FIPS_Code")
 
-        self._us_median_income = co_income_dataframe.loc[0]["Median_Household_Income_2022"]
+        self._us_median_income :float = co_income_dataframe.loc[0]["Median_Household_Income_2022"]
 
         for feature in self._counties_geojson["features"]:
             coords_stack = [ feature["geometry"]["coordinates"] ]
@@ -126,8 +123,8 @@ class LeaguesModel:
             coords = coords_stack[-2]    
             try: 
                 raw_polygon = shapely.geometry.Polygon(coords) 
-                state = feature["properties"]["STATEFP"]
-                county = feature["properties"]["COUNTYFP"]
+                state : str = feature["properties"]["STATEFP"]
+                county : str = feature["properties"]["COUNTYFP"]
                 self._county_dataframe.at[(state, county), "centroid"] = raw_polygon.centroid
                 fips = int(f"{state:02d}{county:03d}")
                 self._county_dataframe.at[(state, county), "income"] = co_income_dataframe.at[fips, "Median_Household_Income_2022"]
@@ -140,7 +137,7 @@ class LeaguesModel:
             return f.read()
 
     def load_league(self, league_dict)-> str:
-        league_name = league_dict["league_name"]
+        league_name : str = league_dict["league_name"]
         self._leagues[league_name] = league_dict  
         return league_name                            
 
@@ -155,13 +152,12 @@ class LeaguesModel:
     def calculate_league_distances(self, league_name):
         teams = self._leagues[league_name]["teams"]
         # compute distance matrix
-        d = { }
+        d = np.zeros((len(self._county_dataframe), len(teams)))
         for i in range(len(self._county_dataframe)):
-            d[i] = np.zeros(len(teams))
             c = self._county_dataframe.iloc[i]     
             if not pd.isna(c["centroid"]):
                 for j, t in enumerate(teams):
-                    d[i][j] = haversine_miles(c["centroid"], t["coordinates"]["lat"], t["coordinates"]["lon"])
+                    d[i,j] = haversine_miles(c["centroid"], t["coordinates"]["lat"], t["coordinates"]["lon"])
  
         self._leagues[league_name]["distances"] = d       
 
@@ -176,25 +172,22 @@ class LeaguesModel:
         league_distance_decay = .002 / league_weight 
 
         d = self._leagues[league]["distances"] 
-        d_array = np.array(list(d.values()))
-        self._county_dataframe[nearest_key] = d_array.min(axis=1)
+        self._county_dataframe[nearest_key] = d.min(axis=1)
 
-        dataframe_out = []
-        dataframe_map = { }
+        dataframe_map : dict[str, pd.DataFrame] = { }
         for i in range(len(self._county_dataframe)):
             c = self._county_dataframe.iloc[i]           
             nearest_d = c[nearest_key]
             nearest_effective_d = 1000000
             county_state = c["STNAME"]
             R = np.zeros_like(d[i])
-            expR = np.zeros_like(d[i])
-            shares = np.zeros_like(d[i])
 
             distance_value_multipliers = np.zeros_like(d[i])
             for j, t in enumerate(self._leagues[league]["teams"]):
                 effective_d = d[i][j]
                 if effective_d > nearest_d:
                     effective_d = nearest_d + ((effective_d - nearest_d) * self.not_nearest_multiplier)
+                
                 team_state = t["state"] 
                 if isinstance(team_state, list):
                     if not county_state in team_state:
@@ -205,11 +198,19 @@ class LeaguesModel:
                         effective_d *= self.canada_multiplier     
                 if effective_d < nearest_effective_d:
                     nearest_effective_d = effective_d 
-                N = t.get("N", 5.0)
-                team_distance_decay = league_distance_decay * (5/N)
-                D = np.exp(-team_distance_decay * min(effective_d, 15000/N))
+                
+                N: float = t.get("N", 5.0)
+                team_distance_decay : float = league_distance_decay * (5/N) 
+                # teams with higher N are less affected by distance, as they have more resources to reach fans further away
+
+                D = np.exp(-team_distance_decay * min(effective_d, 15000/N)) 
+                # very long distances are capped to avoid numerical issues and reflect that beyond a certain point,
+                #  distance doesn't matter as much (e.g. 3000 miles is not that different from 6000 miles in terms of fan support)
+                
                 DS = np.exp(-team_distance_decay * effective_d * 2)  #short term enthusiasm dissipates faster             
-                R[j] = ((league_weight * 10) + t["L"]  * D)  + ((league_weight * 10) + t["S"] * DS)   
+                
+                R[j] = ((league_weight * 10) + t["L"]  * D)  + ((league_weight * 10) + t["S"] * DS) 
+
                 distance_value_multipliers[j] = np.exp(-min(effective_d, 500) / 200) * league_weight
 
             expR = np.exp(R / self.competition_temperature_base)
@@ -219,7 +220,10 @@ class LeaguesModel:
             dataframe_out = []
             for j, t in enumerate(self._leagues[league]["teams"]):                
                 share_population = c["POPESTIMATE2020"] * shares[j]
-                income_rel = c["income"] / self._us_median_income
+                income_rel = c["income"] / self._us_median_income 
+                # if the county has higher income than median, it is more valuable to the team, as they can spend more on tickets,
+                # merchandise, etc. However, this effect has diminishing returns, as a county with 200k income is not twice as valuable
+                # as a county with 100k income. The 0.75 in the denominator controls how quickly the returns diminish.
                 income_mult = income_rel / (income_rel + 0.75)
                 share_population_value = share_population\
                     * distance_value_multipliers[j]\
@@ -261,9 +265,6 @@ class LeaguesModel:
             county = feature["properties"]["COUNTYFP"]
             county_rows = self._leagues[league_name]["output_dataframe_map"].get((state, county))
             if not county_rows is None and county_rows.shape[0] > 0:
-                # group_cols = list(county_rows.columns.difference(["share_population_value"]))
-                # county_rows = county_rows.groupby(group_cols, as_index=False).max()
-                # county_row = county_rows.nlargest(1, "share_population_value").iloc[0]
                 county_row = county_rows.loc[county_rows["share_population_value"].idxmax()]
                 if county_row["share"] > share_threshold:   
                     feature["properties"]["style"] = {
@@ -282,7 +283,7 @@ class LeaguesModel:
             population = row["POPESTIMATE2020"].iloc[0]
 
             all_county_rows = pd.DataFrame()    
-            leagues_table = ""  
+            leagues_rows = ""  
             try:
                 for league in popup_leagues.keys():
                     county_rows = self._leagues[league]["output_dataframe_map"][(statefp, countyfp)][["team_name", 'state', "share_population_value", "share"]]
@@ -293,25 +294,22 @@ class LeaguesModel:
                 if all_county_rows.empty:
                     return
                 all_county_rows = all_county_rows.sort_values(by="share_population_value", ascending=False)
-                for i, county_row in all_county_rows.iterrows():
+                for i in range(len(all_county_rows)):
+                    county_row = all_county_rows.iloc[i]      
                     if county_row["share"] > 1/len(self._leagues[league]["teams"]):
-                        leagues_table += (
-                        "<tr>"  
-                        f"<td>{county_row['league']}</td>" 
-                        f"<td>{county_row['team_name']}</td>" 
-                        f"<td>{county_row['share_population_value']:,.0f}</td>" 
-                        "</tr>")
-       
-                self.last_click_lat = centroid.y
-                self.last_click_lon = centroid.x
-                self.last_click_state = all_county_rows.iloc[0]["state"]
+                        leagues_rows += f'''
+                        <tr>  
+                            <td>{county_row['league']}</td> 
+                            <td>{county_row['team_name']}</td> 
+                            <td>{county_row['share_population_value']:,.0f}</td> 
+                        </tr>'''
 
                 popup = Popup(location=(centroid.y, centroid.x), 
-                    child=widgets.HTML("<table style='border-collapse: collapse;'>" +
-                    f'<caption>{feature["properties"]["Name"]} - {population:,.0f}</caption>' +    
-                    leagues_table +
-                "</table>"  
-                ))
+                    child=widgets.HTML(f'''
+                        <table style="border-collapse: collapse;">
+                            <caption>{feature["properties"]["Name"]} - {population:,.0f}</caption>
+                            {leagues_rows}
+                        </table>'''))  
             except Exception as e:
                 popup = Popup(location=(centroid.y, centroid.x), 
                     child=widgets.HTML(str(e)))
@@ -324,8 +322,7 @@ class LeaguesModel:
         else:
             popup_leagues = self._leagues     
 
-        display(widgets.HTML(
-            """
+        display(widgets.HTML("""
             <style>
             .leaflet-popup-content-wrapper .leaflet-popup-tip {
                 background-color: black;
@@ -344,8 +341,7 @@ class LeaguesModel:
             td {
                 padding: 0 10px;
             }
-            </style>"""    
-        ))
+            </style>"""))
 
         map = Map(basemap=basemaps.CartoDB.Positron, center=[38.72728229549864, -96.9010842308538], zoom=5, scroll_wheel_zoom=True)
 
