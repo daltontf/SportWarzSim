@@ -12,7 +12,9 @@ This project applies a mathematical model to U.S. counties to estimate the level
 
 These visualizations rely on Twitter followers, which often provide small sample sizes at the county level.
 
-this model considers everyone a potential fan. There is a secondary value assigned to a county based on its distance from the venue that provide an multiplier to indicate the value the population of that county has to the team. A fan is a distant county is less likely to attend game(s) in person, but could buy a merchandise and other things. That multiplier might be something like 20% for a county 200 miles from the venue.
+This model considers everyone a potential fan. There is a secondary "value" assigned to a county based on its distance from the venue that provide an multiplier to indicate the value the population of that county has to the team. A fan is a distant county is less likely to attend game(s) in person, but could buy a merchandise and other things. That multiplier might be something like 20% for a county 200 miles from the venue. Median income is taken into account where wealthier areas are more likely spend money supporting teams. 
+
+This "population value" is not a specific dollar amount but should be interpreted relative to each other. 
 
 The term “Warz” comes from a related idea: a strategy simulation game in which players attempt to maximize fan bases by investing in teams across leagues.
 
@@ -25,7 +27,7 @@ The term “Warz” comes from a related idea: a strategy simulation game in whi
 #### Running 
 
 - Currently, the model is implemented as a Jupyter notebook served via Voila.
-(Still searching for a reliable and inexpensive hosting option.)
+(Still searching for a reliable and inexpensive permanent hosting option.)
 
 - You can also run it via Docker:
 
@@ -36,6 +38,10 @@ docker run -p 8866:8866 daltontf1212/sportwarzsim:latest
 ```
 
 Navigate to http://localhost:8866/
+
+#### Notebooks
+
+There are notebooks simulating various scenarios included at the root path. It quickly got unwieldy with led to the creation which provides a  more interactive experience. [Link to documentation](./Blank.md)
 
 #### Things taken into account:
 
@@ -57,9 +63,9 @@ Navigate to http://localhost:8866/
 
     - Expansion and relocated teams.
 
-    - Strong recent performance (especially for teams that aren not typically elite)
+    - Strong recent performance (especially for teams that aren't not typically elite)
     
-    - Arrival of marquee or phenom players
+    - Arrival of marquee or young phenom players
 
 - National footprint. In the code, "N".
 
@@ -73,11 +79,11 @@ Navigate to http://localhost:8866/
 
     - Modifiers:
     
-    - Teams other than the nearest team with have an effective distance that is longer. 
+        - Teams other than the nearest team with have an effective distance that is longer. 
 
-    - Teams in other states will have a effective distance multiplier. Even bigger for teams in Canada
+        - Teams in other states will have a effective distance multiplier. Even bigger for teams in Canada
     
-The code does none of the "L", "S" or "N" accumlation over time. The current values are subjective. Mentally modelling them would include:
+The code does none of the "L", "S" or "N" accumulation over time. The current values are subjective. Mentally modelling them would include:
 
 - "L"
     
@@ -124,7 +130,7 @@ Hypothetical mergers could be simulated. What if Houston and Cincinnati also joi
 
 #### Quirks that trickier to mitigate
 
-- Distance is direct "as the crow flies". This leads to quirks where teams in western Michigan are more loyal to Green Bay or Milwaukee than they likely are. Particular around bodies of water is one place this kind of stuff occurs
+- Distances are direct "as the crow flies". This leads to quirks where teams in western Michigan are more loyal to Green Bay or Milwaukee than they likely are. Particular around bodies of water is one place this kind of stuff occurs
 
 - A farther market may be easier to travel to. Springfield Missouri is closer to Kansas City than St. Louis, but has more Cardinals fans. Recently the Cardinal put a AA affiliate there but I-44 is a factor. This is a bit mitigated by the having the AA team in the data.
 
