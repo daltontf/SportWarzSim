@@ -77,11 +77,11 @@ There are notebooks simulating various scenarios included at the root path. It q
 
     - Star-driven brands (e.g., Messi, LeBron, Ohtani)
 
-    - Modifiers:
+- Other Modifiers:
     
-        - Teams other than the nearest team with have an effective distance that is longer. 
+    - Teams other than the nearest team with have an effective distance that is longer. 
 
-        - Teams in other states will have a effective distance multiplier. Even bigger for teams in Canada
+    - Teams in other states will have a effective distance multiplier. Even bigger for teams in Canada.
     
 The code does none of the "L", "S" or "N" accumulation over time. The current values are subjective. Mentally modelling them would include:
 
@@ -103,13 +103,11 @@ The code does none of the "L", "S" or "N" accumulation over time. The current va
 
 #### "Fun" aspects I'd like to be able to do
 
-- Model expansion and relocation to see if fans are gained and how existing fan bases might shift
-
 - Model what might happen if a league implemented some kind of pro/rel scheme.  National footprint ("N") would be immediately lower. Enthusiasm for such team would go negative ("S") and that would lower long term allegiance ("L") if promotion is earned back quickly.
 
 - Residual loyalty to a relocated team like the Raiders in LA. 
 
-- Residual hostilty toward a team that departed a market, but this is likely balanced out by residual loyalists and if the new market is distant, there not much of an impact. The Dallas Stars are too far from the Twin Cities for this to factor much.
+- Residual hostility toward a team that departed a market, but this is likely balanced out by residual loyalists and if the new market is distant, there not much of an impact. The Dallas Stars are too far from the Twin Cities for this to factor much.
 
 - In baseball, having a minor league affiliate in a remote county should increase loyalty even over a closer market.
 
@@ -119,7 +117,7 @@ Experimenting with having a "virtual" team in location with same name as parent 
 
 - ~~"America's Teams": The NY Times maps shows Yankees, Red Sox, Lakers, Heat fandom in remote places. Perhaps there should be a bottom to a teams distance degradation.~~ This is accomplished using the "N" value.
 
-- Modifier to the "N" on the based on the state of the county. Northern states should have an higher affinity for hockey. Maybe Texas for football. If this thing was really comprehensive it would at the county level incorporating demographic information, but that is way out of scope right now.
+- Modifier to the "N" or "L" on the based on the state of the county. Northern states should have an higher affinity for hockey. Maybe Texas for football. If this thing was really comprehensive it would at the county level incorporating demographic information, but that is way out of scope right now.
 
 - Presences of lower league teams or major college programs in basketball and football could impact pro fandom. This is more of a factor with modeling the "L", "S" values.
 
