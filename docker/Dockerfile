@@ -30,4 +30,4 @@ COPY ./*.json /app
 COPY ./*.py /app
 
 # Run Voila when the container launches
-CMD ["voila", "--theme=dark", "--no-browser", "--Voila.ip=0.0.0.0"]
+CMD ["voila", "--theme=dark", "--no-browser", "--Voila.ip=0.0.0.0", "--MappingKernelManager.cull_idle_timeout=300", "--MappingKernelManager.cull_interval=60"]
