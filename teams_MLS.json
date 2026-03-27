@@ -7,7 +7,7 @@
       "venue": "Mercedes-Benz Stadium",
       "L": 4.5,
       "S": -0.5,
-      "N": 1.0,
+      "N": 5.0,
       "coordinates": {
         "lat": 33.75549,
         "lon": -84.40199
@@ -20,7 +20,7 @@
       "venue": "Q2 Stadium",
       "L": 2.5,
       "S": 2.0,
-      "N": 1.0,
+      "N": 5.0,
       "coordinates": {
         "lat": 30.2000,
         "lon": -97.7181
@@ -33,7 +33,7 @@
       "venue": "Saputo Stadium",
       "L": 4.0,
       "S": -1.0,
-      "N": 1.0,
+      "N": 4.0,
       "coordinates": {
         "lat": 45.5417,
         "lon": -73.5775
@@ -46,7 +46,7 @@
       "venue": "Bank of America Stadium",
       "L": 2.5,
       "S": 1.5,
-      "N": 1.0,
+      "N": 5.0,
       "coordinates": {
         "lat": 35.22585,
         "lon": -80.85361
@@ -59,7 +59,7 @@
       "venue": "Soldier Field",
       "L": 4.0,
       "S": 0.0,
-      "N": 1.0,
+      "N": 5.0,
       "coordinates": {
         "lat": 41.86237,
         "lon": -87.61726
@@ -72,7 +72,7 @@
       "venue": "TQL Stadium",
       "L": 3.0,
       "S": 1.5,
-      "N": 1.0,
+      "N": 6.0,
       "coordinates": {
         "lat": 39.1031,
         "lon": -84.5120
@@ -85,7 +85,7 @@
       "venue": "Dick’s Sporting Goods Park",
       "L": 4.0,
       "S": 1.0,
-      "N": 1.0,
+      "N": 5.0,
       "coordinates": {
         "lat": 39.8061,
         "lon": -104.8938
@@ -98,7 +98,7 @@
       "venue": "Lower.com Field",
       "L": 3.5,
       "S": 1.0,
-      "N": 1.5,
+      "N": 5.5,
       "coordinates": {
         "lat": 39.9678,
         "lon": -83.0077
@@ -111,7 +111,7 @@
       "venue": "Audi Field",
       "L": 4.0,
       "S": 1.5,
-      "N": 1.0,
+      "N": 5.5,
       "coordinates": {
         "lat": 38.8883,
         "lon": -77.0208
@@ -122,9 +122,9 @@
     {
       "name": "Inter Miami CF",
       "venue": "Chase Stadium",
-      "N": 5.0,
       "L": 2.0,
       "S": 4.0,
+      "N": 9.0,
       "coordinates": {
         "lat": 26.1475,
         "lon": -80.2723
@@ -137,7 +137,7 @@
       "venue": "Toyota Stadium",
       "L": 3.0,
       "S": 1.0,
-      "N": 1.0,
+      "N": 5.0,
       "coordinates": {
         "lat": 33.154320,
         "lon": -96.835426
@@ -150,7 +150,7 @@
       "venue": "Shell Energy Stadium",
       "L": 3.5,
       "S": 0.0,
-      "N": 1.0,
+      "N": 5.0,
       "coordinates": {
         "lat": 29.7517,
         "lon": -95.3626
@@ -163,7 +163,7 @@
       "venue": "Dignity Health Sports Park",
       "L": 4.0,
       "S": -1.0,
-      "N": 4.5,
+      "N": 8.0,
       "coordinates": {
         "lat": 33.8642,
         "lon": -118.2610
@@ -174,9 +174,9 @@
     {
       "name": "Los Angeles FC",
       "venue": "BMO Stadium",
-      "N": 4.5,
       "L": 3.0,
       "S": 2.0,
+      "N": 8.5,
       "coordinates": {
         "lat": 34.012772,
         "lon": -118.284627
@@ -189,7 +189,7 @@
       "venue": "Allianz Field",
       "L": 3.5,
       "S": 1.0,
-      "N": 1.0,
+      "N": 5.0,
       "coordinates": {
         "lat": 44.9486,
         "lon": -93.0934
@@ -202,7 +202,7 @@
       "venue": "Geodis Park",
       "L": 3.0,
       "S": 1.0,
-      "N": 1.0,
+      "N": 5.0,
       "coordinates": {
         "lat": 36.1659,
         "lon": -86.7850
@@ -215,7 +215,8 @@
       "venue": "Gillette Stadium",
       "L": 4.0,
       "S": -1.0,
-      "N": 1.0,      "coordinates": {
+      "N": 4.0,
+      "coordinates": {
         "lat": 42.09094,
         "lon": -71.26434
       },
@@ -227,7 +228,7 @@
       "venue": "Yankee Stadium",
       "L": 3.0,
       "S": 1.0,
-      "N": 3.0,
+      "N": 6.0,
       "coordinates": {
         "lat": 40.82917,
         "lon": -73.92639
@@ -240,7 +241,7 @@
       "venue": "Red Bull Arena",
       "L": 4.0,
       "S": 0.0,
-      "N": 2.5,
+      "N": 6.0,
       "coordinates": {
         "lat": 40.8120,
         "lon": -74.0744
@@ -253,7 +254,7 @@
       "venue": "Inter&Co Stadium",
       "L": 3.0,
       "S": 1.0,
-      "N": 1.0,
+      "N": 5.0,
       "coordinates": {
         "lat": 28.5392,
         "lon": -81.3839
@@ -266,7 +267,7 @@
       "venue": "Subaru Park",
       "L": 2.0,
       "S": 2.0,
-      "N": 1.0,
+      "N": 5.0,
       "coordinates": {
         "lat": 39.9175,
         "lon": -75.3550
@@ -279,7 +280,7 @@
       "venue": "Providence Park",
       "L": 3.5,
       "S": 0.0,
-      "N": 1.0,
+      "N": 5.0,
       "coordinates": {
         "lat": 45.5200,
         "lon": -122.6886
@@ -292,7 +293,7 @@
       "venue": "America First Field",
       "L": 2.5,
       "S": 0.5,
-      "N": 1.0,
+      "N": 5.0,
       "coordinates": {
         "lat": 40.5829,
         "lon": -111.8934
@@ -303,9 +304,9 @@
     {
       "name": "San Diego FC",
       "venue": "Snapdragon Stadium",
-      "L": 1.0,
+      "L": 1.5,
       "S": 3.0,
-      "N": 1.0,
+      "N": 5.0,
       "coordinates": {
         "lat": 32.784444,
         "lon": -117.122833
@@ -316,9 +317,9 @@
     {
       "name": "San Jose Earthquakes",
       "venue": "PayPal Park",
-      "L": 3.0,
+      "L": 4.0,
       "S": 0.0,
-      "N": 1.0,
+      "N": 5.0,
       "coordinates": {
         "lat": 37.35139,
         "lon": -121.92500
@@ -331,7 +332,7 @@
       "venue": "Children’s Mercy Park",
       "L": 4.0,
       "S": -0.5,
-      "N": 1.5,
+      "N": 6.0,
       "coordinates": {
         "lat": 39.1219,
         "lon": -94.8233
@@ -343,8 +344,8 @@
       "name": "St. Louis City SC",
       "venue": "Energizer Park",
       "L": 1.5,
-      "S": 3.0,
-      "N": 1.0,
+      "S": 4.0,
+      "N": 5.0,
       "coordinates": {
         "lat": 38.631340,
         "lon": -90.210594
@@ -357,7 +358,7 @@
       "venue": "BMO Field",
       "L": 3.0,
       "S": 0.5,
-      "N": 1.0,
+      "N": 4.0,
       "coordinates": {
         "lat": 43.6426,
         "lon": -79.3895
@@ -370,7 +371,7 @@
       "venue": "BC Place",
       "L": 2.5,
       "S": 1.0,
-      "N": 1.0,
+      "N": 4.0,
       "coordinates": {
         "lat": 49.2779,
         "lon": -123.1159
@@ -383,7 +384,7 @@
       "stadium": "Lumen Field",
       "L": 3.5,
       "S": 1.0,
-      "N": 2.0,
+      "N": 7.0,
       "coordinates": {
         "lat": 47.5952,
         "lon": -122.3316

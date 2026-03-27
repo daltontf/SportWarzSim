@@ -217,7 +217,7 @@ class LeaguesModel:
           
             shares = expR / expR.sum(keepdims=True)
 
-            dataframe_out = []
+            dataframe_out_by_team = {}
             for j, t in enumerate(self._leagues[league]["teams"]):                
                 share_population = c["POPESTIMATE2020"] * shares[j]
                 income_rel = c["income"] / self._us_median_income 
@@ -228,17 +228,31 @@ class LeaguesModel:
                 share_population_value = share_population\
                     * distance_value_multipliers[j]\
                     * income_mult
-                dataframe_out.append({
+
+                if dataframe_out_by_team .get(t["name"]) is None:
+                    dataframe_out_by_team[t["name"]] = {
                         "county": c["CTYNAME"],
                         "state": c["STNAME"],
                         "team_name": t["name"],
-                        "color": t["color"],
-                        "share": shares[j],
-                        "share_population": share_population,
-                        "share_population_value": share_population_value
-                })
-       
-            dataframe_map[c.name] = pd.DataFrame(dataframe_out)
+                        "share": 0,
+                        "share_population": 0,
+                        "share_population_value": 0,
+                        "color": t.get("color", None)
+                    }
+                dataframe_out = dataframe_out_by_team[t["name"]]
+                dataframe_out["share"] += shares[j]
+                dataframe_out["share_population"] += share_population
+                dataframe_out["share_population_value"] += share_population_value    
+            
+            dataframe_out = dataframe_out_by_team.values()
+
+            # groupby and agg allow minor league teams to be aggregated but at a performance cost.
+            dataframe_map[c.name] = pd.DataFrame(dataframe_out)#.groupby(["team_name", "state", "county"], as_index=False).agg({
+            #     "share": "sum",
+            #     "share_population": "sum",
+            #     "share_population_value": "sum",
+            #     "color": "first"
+            #  })        
 
         self._leagues[league]["output_dataframe_map"] = dataframe_map
       

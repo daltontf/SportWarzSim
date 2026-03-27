@@ -7,6 +7,7 @@
       "venue": "Chase Field",
       "L": 6.0,
       "S": 0.0,
+      "N": 5.0,
       "coordinates": {
         "lat": 33.445564,
         "lon": -112.067413
@@ -17,9 +18,9 @@
     {
       "name": "Atlanta Braves",
       "venue": "Truist Park",
-      "N": 8.0,
       "L": 7.0,
       "S": 0.0,
+      "N": 8.0,
       "coordinates": {
         "lat": 33.890781,
         "lon": -84.468239
@@ -32,6 +33,7 @@
       "venue": "Oriole Park at Camden Yards",
       "L": 7.0,
       "S": 0.0,
+      "N": 6.0,
       "coordinates": {
         "lat": 39.284176,
         "lon": -76.622368
@@ -42,9 +44,9 @@
     {
       "name": "Boston Red Sox",
       "venue": "Fenway Park",
-      "N": 8.5,
       "L": 9.0,
       "S": 0.0,
+      "N": 8.5,
       "coordinates": {
         "lat": 42.346613,
         "lon": -71.098817
@@ -55,9 +57,9 @@
     {
       "name": "Chicago Cubs",
       "venue": "Wrigley Field",
-      "N": 8.0,
       "L": 9.0,
       "S": 0.0,
+      "N": 8.0,
       "coordinates": {
         "lat": 41.947201,
         "lon": -87.656413
@@ -66,10 +68,23 @@
       "state": "Illinois"
     },
     {
+      "name": "Chicago Cubs",
+      "venue": "AAA Team",
+      "L": 3.0,
+      "S": 0.0,
+      "N": 1.5,
+      "coordinates": {
+        "lat": 41.58024430223626,
+        "lon": -93.6159367915304435
+      },
+      "state": "Iowa"
+    },
+    {
       "name": "Chicago White Sox",
       "venue": "Guaranteed Rate Field",
       "L": 8.0,
-      "S": 0.0,
+      "S": -1.0,
+      "N": 7.0,
       "coordinates": {
         "lat": 41.830883,
         "lon": -87.635083
@@ -82,6 +97,7 @@
       "venue": "Great American Ball Park",
       "L": 7.5,
       "S": 0.0,
+      "N": 7.0,
       "coordinates": {
         "lat": 39.0975,
         "lon": -84.507103
@@ -94,6 +110,7 @@
       "venue": "Progressive Field",
       "L": 7.0,
       "S": 0.0,
+      "N": 6.0,
       "coordinates": {
         "lat": 41.496262,
         "lon": -81.686043
@@ -106,6 +123,7 @@
       "venue": "Coors Field",
       "L": 6.0,
       "S": 0.0,
+      "N": 5.0,
       "coordinates": {
         "lat": 39.756229,
         "lon": -104.994865
@@ -118,6 +136,7 @@
       "venue": "Comerica Park",
       "L": 7.0,
       "S": 0.0,
+      "N": 7.0,
       "coordinates": {
         "lat": 42.346354,
         "lon": -83.059619
@@ -130,6 +149,7 @@
       "venue": "Minute Maid Park",
       "L": 6.5,
       "S": 0.0,
+      "N": 6.0,
       "coordinates": {
         "lat": 29.757017,
         "lon": -95.356209
@@ -142,6 +162,7 @@
       "venue": "Kauffman Stadium",
       "L": 6.5,
       "S": 0.0,
+      "N": 6.0,
       "coordinates": {
         "lat": 39.051910,
         "lon": -94.480682
@@ -157,6 +178,7 @@
       "venue": "Angel Stadium of Anaheim",
       "L": 7.5,
       "S": 0.0,
+      "N": 6.5,
       "coordinates": {
         "lat": 33.800560,
         "lon": -117.883438
@@ -167,9 +189,9 @@
     {
       "name": "Los Angeles Dodgers",
       "venue": "Dodger Stadium",
-      "N": 8.5,
       "L": 9.5,
       "S": 0.0,
+      "N": 8.5,
       "coordinates": {
         "lat": 34.073814,
         "lon": -118.240784
@@ -182,6 +204,7 @@
       "venue": "LoanDepot Park",
       "L": 6.0,
       "S": 0.0,
+      "N": 5.0,
       "coordinates": {
         "lat": 25.778301,
         "lon": -80.220352
@@ -194,6 +217,7 @@
       "venue": "American Family Field",
       "L": 6.5,
       "S": 0.0,
+      "N": 5.0,
       "coordinates": {
         "lat": 43.027954,
         "lon": -87.971497
@@ -206,6 +230,7 @@
       "venue": "Target Field",
       "L": 6.5,
       "S": 0.0,
+      "N": 5.5,
       "coordinates": {
         "lat": 44.982075,
         "lon": -93.278435
@@ -216,9 +241,9 @@
     {
       "name": "New York Mets",
       "venue": "Citi Field",
-      "N": 7.5,
       "L": 8.0,
       "S": 0.0,
+      "N": 7.5,
       "coordinates": {
         "lat": 40.757256,
         "lon": -73.846237
@@ -229,9 +254,9 @@
     {
       "name": "New York Yankees",
       "venue": "Yankee Stadium",
-      "N": 10.0,
       "L": 9.5,
       "S": 0.0,
+      "N": 10.0,
       "coordinates": {
         "lat": 40.82916667,
         "lon": -73.92638889
@@ -244,6 +269,7 @@
       "venue": "Sutter Health Park",
       "L": 3.0,
       "S": -0.5,
+      "N": 3.0,
       "coordinates": {
         "lat": 38.58048,
         "lon": -121.51352
@@ -256,6 +282,7 @@
       "venue": "Citizens Bank Park",
       "L": 7.5,
       "S": 0.0,
+      "N": 7.0,
       "coordinates": {
         "lat": 39.906216,
         "lon": -75.167465
@@ -268,6 +295,7 @@
       "venue": "PNC Park",
       "L": 7.0,
       "S": 0.0,
+      "N": 6.0,
       "coordinates": {
         "lat": 40.447105,
         "lon": -80.006363
@@ -280,6 +308,7 @@
       "venue": "Petco Park",
       "L": 6.5,
       "S": 0.0,
+      "N": 6.0,
       "coordinates": {
         "lat": 32.707415,
         "lon": -117.157216
@@ -290,9 +319,9 @@
     {
       "name": "San Francisco Giants",
       "venue": "Oracle Park",
-      "N": 8.0,
       "L": 7.5,
       "S": 0.0,
+      "N": 7.0,
       "coordinates": {
         "lat": 37.778572,
         "lon": -122.389717
@@ -305,6 +334,7 @@
       "venue": "T-Mobile Park",
       "L": 6.5,
       "S": 2.0,
+      "N": 5.0,
       "coordinates": {
         "lat": 47.591480,
         "lon": -122.332863
@@ -315,9 +345,9 @@
     {
       "name": "St. Louis Cardinals",
       "venue": "Busch Stadium",
-      "N": 8.0,
       "L": 9.0,
       "S": 0.0,
+      "N": 5.0,
       "coordinates": {
         "lat": 38.626004,
         "lon": -90.188538
@@ -326,10 +356,35 @@
       "state": "Missouri"
     },
     {
+      "name": "St. Louis Cardinals",
+      "venue": "AA Team",
+      "L": 2.0,
+      "S": 0.0,
+      "N": 1.0,
+      "coordinates": {
+        "lat": 37.211653846250464,
+        "lon": -93.27938832930909
+      },
+      "state": "Missouri"
+    },
+    {
+      "name": "St. Louis Cardinals",
+      "venue": "AAA Team",
+      "L": 3.0,
+      "S": 0.0,
+      "N": 1.0,
+      "coordinates": {
+        "lat": 35.14298543406518,
+        "lon": -90.0493010299043
+      },
+      "state": "Tennessee"
+    },
+    {
       "name": "Tampa Bay Rays",
       "venue": "Tropicana Field",
       "L": 6.0,
       "S": 0.0,
+      "N": 4.0,
       "coordinates": {
         "lat": 27.768284,
         "lon": -82.653961
@@ -342,6 +397,7 @@
       "venue": "Globe Life Field",
       "L": 6.5,
       "S": 0.0,
+      "N": 5.0,
       "coordinates": {
         "lat": 32.751333,
         "lon": -97.082778
@@ -354,6 +410,7 @@
       "venue": "Rogers Centre",
       "L": 6.5,
       "S": 0.0,
+      "N": 5.0,
       "coordinates": {
         "lat": 43.641444,
         "lon": -79.389417
@@ -367,48 +424,13 @@
       "venue": "Nationals Park",
       "L": 6.0,
       "S": 0.0,
+      "N": 5.0,
       "coordinates": {
         "lat": 38.873055,
         "lon": -77.007996
       },
       "color": "#AB0003",
       "state": "District of Columbia"
-    },
-    {
-      "name": "St. Louis Cardinals",
-      "venue": "AA Team",
-      "L": 0.25,
-      "S": 0.0,
-      "coordinates": {
-        "lat": 37.211653846250464,
-        "lon": -93.27938832930909
-      },
-      "color": "#C41E3A",
-      "state": "Missouri"
-    },
-    {
-      "name": "St. Louis Cardinals",
-      "venue": "AAA Team",
-      "L": 0.25,
-      "S": 0.0,
-      "coordinates": {
-        "lat": 35.14298543406518,
-        "lon": -90.0493010299043
-      },
-      "color": "#C41E3A",
-      "state": "Tennesee"
-    },
-    {
-      "name": "Chicago Cubs",
-      "venue": "AAA Team",
-      "L": 0.5,
-      "S": 0.0,
-      "coordinates": {
-        "lat": 41.58024430223626,
-        "lon": -93.6159367915304435
-      },
-      "color": "#0E3386",
-      "state": "Iowa"
     }
   ]
 }
