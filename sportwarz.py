@@ -105,6 +105,7 @@ class LeaguesModel:
     not_nearest_multiplier : float = 2 # added to distance multiplied (d - nearest_d) 
     not_same_state_multiplier : float = 2
     canada_multiplier : float = 2 
+    distance_decay_numerator : float = 0.0025 # multiplied by league weight and divided by team N to get distance decay factor
 
     def load_counties_geojson(self):
         with open("./counties.geojson") as f:
@@ -178,7 +179,7 @@ class LeaguesModel:
 
     def compute_league_shares(self, league):
         league_weight = self._leagues[league]["weight"]
-        league_distance_decay = .002 / league_weight 
+        league_distance_decay = self.distance_decay_numerator / league_weight 
 
         d = self._leagues[league]["distances"] 
 
@@ -304,7 +305,7 @@ class LeaguesModel:
             leagues_rows = ""  
             try:
                 for league in popup_leagues.keys():
-                    county_rows = self._leagues[league]["output_dataframe_map"][(statefp, countyfp)][["team_name", 'state', "share_population_value", "share"]]
+                    county_rows = self._leagues[league]["output_dataframe_map"][(statefp, countyfp)][["team_name", 'state', "share_population", "share_population_value", "share"]]
                     county_rows = county_rows.group_by(['team_name', 'state']).sum() 
                     county_rows = county_rows.with_columns(pl.lit(league).alias("league"))
                     all_county_rows = pl.concat([all_county_rows, county_rows])
@@ -318,13 +319,20 @@ class LeaguesModel:
                         <tr>  
                             <td>{county_row['league']}</td> 
                             <td>{county_row['team_name']}</td> 
+                            <td>{county_row['share_population']:,.0f}</td> 
                             <td>{county_row['share_population_value']:,.0f}</td> 
                         </tr>'''
 
-                popup = Popup(location=(centroid.y, centroid.x), 
+                popup = Popup(location=(centroid.y, centroid.x), max_width=500,
                     child=widgets.HTML(f'''
                         <table style="border-collapse: collapse;">
-                            <caption>{feature["properties"]["Name"]} - {population:,.0f}</caption>
+                            <caption>{feature["properties"]["Name"]} - Pop: {population:,.0f}</caption>
+                            <tr>
+                                <th>League</th>
+                                <th>Team</th>
+                                <th>Pop.</th>
+                                <th>Pop. Value</th>
+                            </tr>
                             {leagues_rows}
                         </table>'''))  
             except Exception as e:
@@ -356,7 +364,7 @@ class LeaguesModel:
                 style="border-collapse: collapse;"
             }
 
-            td {
+            th,td {
                 padding: 0 10px;
             }
             </style>"""))
@@ -426,7 +434,8 @@ class LeaguesModel:
         leagues_model = LeaguesModel()
         leagues_model._county_dataframe = self._county_dataframe
         leagues_model._us_median_income = self._us_median_income
-        leagues_model.load_counties_geojson()
+        leagues_model._counties_centroids = self._counties_centroids
+        leagues_model._counties_geojson = self._counties_geojson
         leagues_model._leagues =  { 
             league_name: {           
                 "weight": self._leagues[league_name]["weight"],
