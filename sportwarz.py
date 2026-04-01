@@ -102,8 +102,8 @@ class LeaguesModel:
     _leaflet_map: Map = None
 
     competition_temperature_base : float = 1 # Lower -> winner takes it
-    not_nearest_multiplier : float = 2 # added to distance multiplied (d - nearest_d) 
-    not_same_state_multiplier : float = 2
+    not_nearest_multiplier : float = 2.5 # added to distance multiplied (d - nearest_d) 
+    not_same_state_multiplier : float = 3
     canada_multiplier : float = 2 
     distance_decay_numerator : float = 0.0025 # multiplied by league weight and divided by team N to get distance decay factor
 
@@ -330,7 +330,7 @@ class LeaguesModel:
                             <tr>
                                 <th>League</th>
                                 <th>Team</th>
-                                <th>Pop.</th>
+                                <th>Pop. Share</th>
                                 <th>Pop. Value</th>
                             </tr>
                             {leagues_rows}
@@ -434,8 +434,7 @@ class LeaguesModel:
         leagues_model = LeaguesModel()
         leagues_model._county_dataframe = self._county_dataframe
         leagues_model._us_median_income = self._us_median_income
-        leagues_model._counties_centroids = self._counties_centroids
-        leagues_model._counties_geojson = self._counties_geojson
+        leagues_model.load_counties_geojson()
         leagues_model._leagues =  { 
             league_name: {           
                 "weight": self._leagues[league_name]["weight"],

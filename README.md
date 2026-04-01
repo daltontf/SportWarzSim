@@ -130,6 +130,6 @@ Hypothetical mergers could be simulated. What if Houston and Cincinnati also joi
 
 - Distances are direct "as the crow flies". This leads to quirks where teams in western Michigan are more loyal to Green Bay or Milwaukee than they likely are. Particular around bodies of water is one place this kind of stuff occurs
 
-- A farther market may be easier to travel to. Springfield Missouri is closer to Kansas City than St. Louis, but has more Cardinals fans. Recently the Cardinal put a AA affiliate there but I-44 is a factor. This is a bit mitigated by the having the AA team in the data.
+- A farther market may be easier to travel to. Springfield Missouri is closer to Kansas City than St. Louis, but has more Cardinals fans. Recently the Cardinals put a AA affiliate there but I-44 is a factor. This is a bit mitigated by the having the AA team in the data.
 
-- Since the NFL's Giants and Jets play in the same venue, it will be a challenge to program in the geographic tendencies on those two teams. This could be mitigated be having a "virtual" teams in various boroughs.
+- Since the NFL's Giants and Jets play in the same venue, it will be a challenge to program in the geographic tendencies on those two teams. This could be mitigated be having a "virtual" teams in various boroughs. The Jets used to play at Shea Stadium so a "virtual team" is there.  
