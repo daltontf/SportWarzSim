@@ -28,6 +28,7 @@ COPY ./*.geojson /app
 COPY ./*.ipynb /app
 COPY ./*.json /app
 COPY ./*.py /app
+COPY ./*.png /app
 
 # Run Voila when the container launches
 CMD ["voila", "--theme=dark", "--no-browser", "--Voila.ip=0.0.0.0", "--MappingKernelManager.cull_idle_timeout=300", "--MappingKernelManager.cull_interval=60"]
