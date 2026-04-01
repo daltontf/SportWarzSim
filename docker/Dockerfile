@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Install Jupyter Notebook
 RUN pip install jupyter
-RUN pip install pandas
+RUN pip install polars
 RUN pip install numpy
 RUN pip install shapely
 RUN pip install ipywidgets

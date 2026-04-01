@@ -1,7 +1,8 @@
 import json
+import sys
 import shapely
 import numpy as np
-import pandas as pd
+import polars as pl
 import ipywidgets as widgets
 import itables
 
@@ -35,7 +36,7 @@ class League(TypedDict):
     league_name: str
     weight: float
     json: LeagueJson
-    dataframe: pd.DataFrame
+    dataframe: pl.DataFrame
     distances: np.ndarray
     shares: np.ndarray
 
@@ -82,17 +83,19 @@ def opacity_for_population(share_population_value):
         return 0.2
     return 0.1    
 
-def league_teams_sums(league_data) -> pd.DataFrame:
-    league_df = pd.concat(league_data["output_dataframe_map"].values())
-    return league_df[['team_name', 'share_population', 'share_population_value']]\
-            .groupby('team_name')\
-            .sum()\
-            .sort_values(by='share_population',ascending=False)
+def league_teams_sums(league_data) -> pl.DataFrame:
+    league_df = pl.concat(league_data["output_dataframe_map"].values())
+    return league_df.select(['team_name', 'share_population', 'share_population_value'])\
+            .group_by('team_name')\
+            .agg(pl.sum('share_population'), pl.sum('share_population_value'))\
+            .sort('share_population_value', descending=True)
 
 class LeaguesModel:
     _counties_geojson: CountiesGEOJson
+    _counties_centroids: dict[tuple[str, str], shapely.geometry.Point] = { }
+    _counties_median_incomes: dict[str, float] = { }
     _leagues: Leagues = { }
-    _county_dataframe: pd.DataFrame  
+    _county_dataframe: pl.DataFrame  
     _us_median_income: float
 
     _geojson_layer: GeoJSON = None
@@ -108,11 +111,14 @@ class LeaguesModel:
             self._counties_geojson =  json.load(f)
         
     def load_counties_data(self):
-        self._county_dataframe = pd.read_csv("./co-est2024-alldata.csv", index_col=["STATE", "COUNTY"], encoding="iso-8859-1")
+        self._county_dataframe = pl.read_csv("./co-est2024-alldata.csv", encoding="iso-8859-1")
 
-        co_income_dataframe: pd.DataFrame = pd.read_csv("./Income2023.csv", index_col="FIPS_Code")
+        co_income_dataframe: pl.DataFrame = pl.read_csv("./Income2023.csv", encoding="iso-8859-1")
 
-        self._us_median_income :float = co_income_dataframe.loc[0]["Median_Household_Income_2022"]
+        for row in co_income_dataframe.iter_rows(named=True):
+            self._counties_median_incomes[row["FIPS_Code"]] = row["Median_Household_Income_2022"]
+
+        self._us_median_income :float = self._counties_median_incomes[0]
 
         for feature in self._counties_geojson["features"]:
             coords_stack = [ feature["geometry"]["coordinates"] ]
@@ -125,9 +131,7 @@ class LeaguesModel:
                 raw_polygon = shapely.geometry.Polygon(coords) 
                 state : str = feature["properties"]["STATEFP"]
                 county : str = feature["properties"]["COUNTYFP"]
-                self._county_dataframe.at[(state, county), "centroid"] = raw_polygon.centroid
-                fips = int(f"{state:02d}{county:03d}")
-                self._county_dataframe.at[(state, county), "income"] = co_income_dataframe.at[fips, "Median_Household_Income_2022"]
+                self._counties_centroids[(state, county)] = raw_polygon.centroid
             except Exception as e:
                 print(e)
                 print("Invalid coordinates:", feature["properties"]["Name"])  
@@ -151,14 +155,21 @@ class LeaguesModel:
 
     def calculate_league_distances(self, league_name):
         teams = self._leagues[league_name]["teams"]
-        # compute distance matrix
-        d = np.zeros((len(self._county_dataframe), len(teams)))
-        for i in range(len(self._county_dataframe)):
-            c = self._county_dataframe.iloc[i]     
-            if not pd.isna(c["centroid"]):
+        
+        counties = self._county_dataframe.to_dicts()
+
+        d = np.zeros((len(counties), len(teams)))
+
+        for i, c in enumerate(counties):
+            centroid = self._counties_centroids.get((c["STATE"], c["COUNTY"]))
+            if centroid:
                 for j, t in enumerate(teams):
-                    d[i,j] = haversine_miles(c["centroid"], t["coordinates"]["lat"], t["coordinates"]["lon"])
- 
+                    d[i, j] = haversine_miles(
+                        centroid,
+                        t["coordinates"]["lat"],
+                        t["coordinates"]["lon"]
+                    )
+   
         self._leagues[league_name]["distances"] = d       
 
     def calculate_distances(self):
@@ -166,18 +177,17 @@ class LeaguesModel:
             self.calculate_league_distances(league_name) 
 
     def compute_league_shares(self, league):
-        nearest_key = "nearest"
-
         league_weight = self._leagues[league]["weight"]
         league_distance_decay = .002 / league_weight 
 
         d = self._leagues[league]["distances"] 
-        self._county_dataframe[nearest_key] = d.min(axis=1)
 
-        dataframe_map : dict[str, pd.DataFrame] = { }
-        for i in range(len(self._county_dataframe)):
-            c = self._county_dataframe.iloc[i]           
-            nearest_d = c[nearest_key]
+        dataframe_map : dict[str, pl.DataFrame] = { }
+
+        counties = self._county_dataframe.to_dicts()
+
+        for i, c in enumerate(counties):
+            nearest_d = d[i].min()
             nearest_effective_d = 1000000
             county_state = c["STNAME"]
             R = np.zeros_like(d[i])
@@ -220,7 +230,7 @@ class LeaguesModel:
             dataframe_out_by_team = {}
             for j, t in enumerate(self._leagues[league]["teams"]):                
                 share_population = c["POPESTIMATE2020"] * shares[j]
-                income_rel = c["income"] / self._us_median_income 
+                income_rel = self._counties_median_incomes[c["STATE"] * 1000 + c["COUNTY"]] / self._us_median_income 
                 # if the county has higher income than median, it is more valuable to the team, as they can spend more on tickets,
                 # merchandise, etc. However, this effect has diminishing returns, as a county with 200k income is not twice as valuable
                 # as a county with 100k income. The 0.75 in the denominator controls how quickly the returns diminish.
@@ -244,15 +254,9 @@ class LeaguesModel:
                 dataframe_out["share_population"] += share_population
                 dataframe_out["share_population_value"] += share_population_value    
             
-            dataframe_out = dataframe_out_by_team.values()
+            dataframe_out = list(dataframe_out_by_team.values())
 
-            # groupby and agg allow minor league teams to be aggregated but at a performance cost.
-            dataframe_map[c.name] = pd.DataFrame(dataframe_out)#.groupby(["team_name", "state", "county"], as_index=False).agg({
-            #     "share": "sum",
-            #     "share_population": "sum",
-            #     "share_population_value": "sum",
-            #     "color": "first"
-            #  })        
+            dataframe_map[(c["STATE"], c["COUNTY"])] = pl.DataFrame(dataframe_out)
 
         self._leagues[league]["output_dataframe_map"] = dataframe_map
       
@@ -279,7 +283,7 @@ class LeaguesModel:
             county = feature["properties"]["COUNTYFP"]
             county_rows = self._leagues[league_name]["output_dataframe_map"].get((state, county))
             if not county_rows is None and county_rows.shape[0] > 0:
-                county_row = county_rows.loc[county_rows["share_population_value"].idxmax()]
+                county_row = dict(zip(county_rows.columns, county_rows.sort("share_population_value", descending=True).row(0)))
                 if county_row["share"] > share_threshold:   
                     feature["properties"]["style"] = {
                         "color": "grey",
@@ -292,24 +296,23 @@ class LeaguesModel:
         def show_teams(event, feature, **kwargs): 
             statefp = feature["properties"]["STATEFP"]
             countyfp = feature["properties"]["COUNTYFP"]
-            row = self._county_dataframe.query(f"STATE == {statefp} & COUNTY == {countyfp}") 
-            centroid = row["centroid"].iloc[0]
-            population = row["POPESTIMATE2020"].iloc[0]
+            row = self._county_dataframe.filter((pl.col("STATE") == statefp) & (pl.col("COUNTY") == countyfp))
+            centroid = self._counties_centroids[(statefp, countyfp)]
+            population = row["POPESTIMATE2020"].item(0)
 
-            all_county_rows = pd.DataFrame()    
+            all_county_rows = pl.DataFrame()    
             leagues_rows = ""  
             try:
                 for league in popup_leagues.keys():
                     county_rows = self._leagues[league]["output_dataframe_map"][(statefp, countyfp)][["team_name", 'state', "share_population_value", "share"]]
-                    county_rows = county_rows.groupby(['team_name', 'state'], as_index=False).sum() 
-                    county_rows["league"] = league
-                    all_county_rows = pd.concat([all_county_rows, county_rows], ignore_index=True)
+                    county_rows = county_rows.group_by(['team_name', 'state']).sum() 
+                    county_rows = county_rows.with_columns(pl.lit(league).alias("league"))
+                    all_county_rows = pl.concat([all_county_rows, county_rows])
       
-                if all_county_rows.empty:
+                if all_county_rows.height == 0:
                     return
-                all_county_rows = all_county_rows.sort_values(by="share_population_value", ascending=False)
-                for i in range(len(all_county_rows)):
-                    county_row = all_county_rows.iloc[i]      
+                all_county_rows_dict = all_county_rows.sort("share_population_value", descending=True).to_dicts()
+                for i, county_row in enumerate(all_county_rows_dict):
                     if county_row["share"] > 1/len(self._leagues[league]["teams"]):
                         leagues_rows += f'''
                         <tr>  
@@ -325,8 +328,9 @@ class LeaguesModel:
                             {leagues_rows}
                         </table>'''))  
             except Exception as e:
+                e_type, e_object, e_traceback = sys.exc_info()
                 popup = Popup(location=(centroid.y, centroid.x), 
-                    child=widgets.HTML(str(e)))
+                    child=widgets.HTML(f"""<pre>{e}</pre><pre>Line: {e_traceback.tb_lineno}</pre>>"""))
             leaflet_map.add(popup)
         return show_teams  
 
@@ -433,23 +437,43 @@ class LeaguesModel:
         return leagues_model
 
     def show_pre_post_merged_results(self, league_name:str, after_model: Leagues):
-        pd.set_option('display.float_format', lambda x: '%.0f' % x)
-        pd.set_option('display.max_rows', 256)
-        pd.set_option('display.width', 256)
 
-        pre_sums = league_teams_sums(self._leagues[league_name])
-        post_sums = league_teams_sums(after_model._leagues[league_name])
-        merged = pd.merge(pre_sums, post_sums, on='team_name', how='outer', suffixes=("_before", "_after"))
-        merged["share_population_before"] = merged["share_population_before"].fillna(0) 
-        merged["share_population_after"] = merged["share_population_after"].fillna(0) 
-        merged["share_population_value_before"] = merged["share_population_value_before"].fillna(0) 
-        merged["share_population_value_after"] = merged["share_population_value_after"].fillna(0) 
-        merged["share_population_delta"] = merged["share_population_after"] - merged["share_population_before"]
-        merged["share_population_value_delta"] = merged["share_population_value_after"] - merged["share_population_value_before"]
+        before_sums = league_teams_sums(self._leagues[league_name])\
+            .rename({"share_population": "share_population_before", "share_population_value": "share_population_value_before"})
+
+        after_sums = league_teams_sums(after_model._leagues[league_name])\
+            .rename({"share_population": "share_population_after", "share_population_value": "share_population_value_after"})
+
+        merged = before_sums.join(after_sums, on='team_name', how='outer', coalesce=True)\
+            .fill_null(0).with_columns([
+               (pl.col("share_population_after") - pl.col("share_population_before")).alias("share_population_change"),
+               (pl.col("share_population_value_after") - pl.col("share_population_value_before")).alias("share_population_value_change")
+            ])
         
-        total = merged.agg(['sum']).rename(index={'sum': 'Total'})
- 
-        full = pd.concat([merged, total])
+        formatter = lambda x: f"{x:,.0f}"
+        
+        total = merged.select([
+              pl.sum("share_population_value_before"),
+              pl.sum("share_population_value_after"),
+              pl.sum("share_population_value_change"),
+            ]).with_columns([
+                pl.col("share_population_value_before").map_elements(formatter).alias("share_population_value_before"),
+                pl.col("share_population_value_after").map_elements(formatter).alias("share_population_value_after"),
+                pl.col("share_population_value_change").map_elements(formatter).alias("share_population_value_change")
+            ]).rename({
+                "share_population_value_before": "Total Population Value Before",
+                "share_population_value_after": "Total Population Value After",
+                "share_population_value_change": "Total Population Value Change"
+            })
 
-        with pd.option_context("display.float_format", "{:,.0f}".format):
-            return itables.show(full, paging=False, pageLength=100 )
+        with pl.Config(float_precision=0):
+            itables.show(merged.with_columns([
+                pl.col("share_population_before").map_elements(formatter).alias("share_population_before"),
+                pl.col("share_population_after").map_elements(formatter).alias("share_population_after"),
+                pl.col("share_population_value_before").map_elements(formatter).alias("share_population_value_before"),
+                pl.col("share_population_value_after").map_elements(formatter).alias("share_population_value_after"),
+                pl.col("share_population_change").map_elements(formatter).alias("share_population_change"),
+                pl.col("share_population_value_change").map_elements(formatter).alias("share_population_value_change")
+            ]), paging=False, pageLength=100)
+            itables.show(total)
+        
