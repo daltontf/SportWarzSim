@@ -70,7 +70,7 @@
     {
       "name": "Chicago Cubs",
       "venue": "AAA Team",
-      "L": 3.0,
+      "L": 2.0,
       "S": 0.0,
       "N": 1.5,
       "coordinates": {
@@ -172,6 +172,18 @@
         "Missouri",
         "Kansas"
       ]
+    },
+    {
+      "name": "Kansas City Royals",
+      "venue": "AAA Team (Omaha Storm Chasers)",
+      "L": 1.5,
+      "S": 0.0,
+      "N": 1.0,
+      "coordinates": {
+        "lat": 41.151957, 
+        "lon": -96.106393
+      },
+      "state": "Nebraska"
     },
     {
       "name": "Los Angeles Angels",
@@ -358,7 +370,7 @@
     {
       "name": "St. Louis Cardinals",
       "venue": "AA Team",
-      "L": 2.0,
+      "L": 1.0,
       "S": 0.0,
       "N": 1.0,
       "coordinates": {
@@ -370,7 +382,7 @@
     {
       "name": "St. Louis Cardinals",
       "venue": "AAA Team",
-      "L": 3.0,
+      "L": 2.0,
       "S": 0.0,
       "N": 1.0,
       "coordinates": {

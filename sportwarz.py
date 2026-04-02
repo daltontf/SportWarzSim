@@ -102,9 +102,9 @@ class LeaguesModel:
     _leaflet_map: Map = None
 
     competition_temperature_base : float = 1 # Lower -> winner takes it
-    not_nearest_multiplier : float = 2.5 # added to distance multiplied (d - nearest_d) 
-    not_same_state_multiplier : float = 3
-    canada_multiplier : float = 2 
+    not_nearest_multiplier : float = 3 # added to distance multiplied (d - nearest_d) 
+    not_same_state_multiplier : float = 2 # distance multiplied if team is not in the same state as the county. 
+    canada_multiplier : float = 2 # an additional multiplier if the team is in Canada, as it's even less likely for a county to support a team from another country    
     distance_decay_numerator : float = 0.0025 # multiplied by league weight and divided by team N to get distance decay factor
 
     def load_counties_geojson(self):
@@ -251,9 +251,9 @@ class LeaguesModel:
                         "color": t.get("color", None)
                     }
                 dataframe_out = dataframe_out_by_team[t["name"]]
-                dataframe_out["share"] += shares[j]
-                dataframe_out["share_population"] += share_population
-                dataframe_out["share_population_value"] += share_population_value    
+                dataframe_out["share"] = max(dataframe_out["share"], shares[j])
+                dataframe_out["share_population"] = max(dataframe_out["share_population"], share_population)
+                dataframe_out["share_population_value"] = max(dataframe_out["share_population_value"], share_population_value)
             
             dataframe_out = list(dataframe_out_by_team.values())
 

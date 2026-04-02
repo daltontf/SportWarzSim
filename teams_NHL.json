@@ -106,7 +106,19 @@
       },
       "color": "#002654",
       "state": "Ohio"
-    },
+    }, 
+    {
+     "name": "Columbus Blue Jackets",
+     "venue": "AHL - Cleveland Monsters",
+     "L": 1.0,
+     "S": 0.0,
+     "N": 0.5,
+     "coordinates": {
+       "lat": 41.496389,
+       "lon": -81.688056
+     },
+     "state": "Ohio"
+    },  
     {
       "name": "Dallas Stars",
       "venue": "American Airlines Center",
