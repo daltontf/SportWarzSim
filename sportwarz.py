@@ -5,10 +5,15 @@ import numpy as np
 import polars as pl
 import ipywidgets as widgets
 import itables
+import geopandas as gpd
 
-from typing import TypedDict, Union, Dict, NewType
+from typing import Callable, TypedDict, Union, Dict, NewType
 from IPython.display import display
 from ipyleaflet import Map, GeoJSON, Popup, FullScreenControl, basemaps
+from pyproj import Transformer
+from shapely.ops import transform, unary_union
+from shapely.geometry import LineString
+from shapely.geometry.point import Point
 
 class Coordinates(TypedDict):
     lat: float
@@ -52,6 +57,10 @@ class Feature(TypedDict):
 
 class CountiesGEOJson(TypedDict):
     features: list[Feature]
+
+crs_transformer = Transformer.from_crs("EPSG:4326", "EPSG:5070", always_xy=True)
+
+METERS_TO_MILES = 0.000621371    
 
 def haversine_miles(centroid, lat2, lon2):
     r = 3958.8  # earth radius miles
@@ -101,7 +110,8 @@ class LeaguesModel:
     _geojson_layer: GeoJSON = None
     _leaflet_map: Map = None
 
-    competition_temperature_base : float = 1 # Lower -> winner takes it
+    competition_temperature_base : float = 1.25 # Lower -> winner takes it
+    non_us_multiplier : float = 2 # part of distance over outside of US including bodies of water.
     not_nearest_multiplier : float = 3 # added to distance multiplied (d - nearest_d) 
     not_same_state_multiplier : float = 2 # distance multiplied if team is not in the same state as the county. 
     canada_multiplier : float = 2 # an additional multiplier if the team is in Canada, as it's even less likely for a county to support a team from another country    
@@ -117,7 +127,7 @@ class LeaguesModel:
         co_income_dataframe: pl.DataFrame = pl.read_csv("./Income2023.csv", encoding="iso-8859-1")
 
         for row in co_income_dataframe.iter_rows(named=True):
-            self._counties_median_incomes[row["FIPS_Code"]] = row["Median_Household_Income_2022"]
+            self._counties_median_incomes[row["FIPS_Code"]] = row["Median_Household_Income"]
 
         self._us_median_income :float = self._counties_median_incomes[0]
 
@@ -154,7 +164,60 @@ class LeaguesModel:
     def add_league(self, league_data:League):
         self._leagues = { league_data["league_name"]: league_data }
 
+    def line_lengths(self, p1, p2, sindex, counties):
+        # p1, p2 are (lat, lon)
+        # --- 1. Build line in projected space ---
+        line_wgs84 = LineString([p1, p2])
+
+        line = transform(crs_transformer.transform, line_wgs84)
+
+        total_length = line.length
+
+        # --- 2. Spatial index query (bounding box filter) ---
+        candidate_idx = list(sindex.intersection(line.bounds))
+    
+        if not candidate_idx:
+            # No counties nearby → all non_us
+            miles = total_length * METERS_TO_MILES
+            return miles, miles
+
+        candidates = counties.iloc[candidate_idx]
+
+        # --- 3. Precise intersection with candidates ---
+        land_parts = []
+
+        for geom in candidates.geometry:
+            part = line.intersection(geom)
+            if not part.is_empty:
+                land_parts.append(part)
+
+        # --- 4. Merge to avoid double counting ---
+        if land_parts:
+            land_union = unary_union(land_parts)
+            land_length = land_union.length
+        else:
+            land_length = 0.0
+
+        non_us_length = total_length - land_length
+
+        # --- 5. Convert to miles ---
+        total_miles = total_length * METERS_TO_MILES
+        non_us_miles = non_us_length * METERS_TO_MILES
+
+        return total_miles, non_us_miles    
+
     def calculate_league_distances(self, league_name):
+        counties = gpd.read_file("counties.geojson")
+
+        # --- Project counties to EPSG:5070 ---
+        #counties_crs = counties.to_crs(epsg=5070)
+
+        # Optional but HIGHLY recommended: simplify
+        #counties_crs["geometry"] = counties.geometry.simplify(1000, preserve_topology=True)
+
+        # --- Build spatial index ---
+        #sindex = counties_crs.sindex
+
         teams = self._leagues[league_name]["teams"]
         
         counties = self._county_dataframe.to_dicts()
@@ -170,6 +233,13 @@ class LeaguesModel:
                         t["coordinates"]["lat"],
                         t["coordinates"]["lon"]
                     )
+                    # distances = self.line_lengths(
+                    #     Point(centroid.x, centroid.y),
+                    #     Point(t["coordinates"]["lon"], t["coordinates"]["lat"]),
+                    #     sindex, 
+                    #     counties_crs
+                    # )
+                    # d[i, j] = distances[0] + distances[1] * self.non_us_multiplier                                        
    
         self._leagues[league_name]["distances"] = d       
 
@@ -193,7 +263,7 @@ class LeaguesModel:
             county_state = c["STNAME"]
             R = np.zeros_like(d[i])
 
-            distance_value_multipliers = np.zeros_like(d[i])
+            value_multipliers = np.zeros_like(d[i])
             for j, t in enumerate(self._leagues[league]["teams"]):
                 effective_d = d[i][j]
                 if effective_d > nearest_d:
@@ -212,17 +282,18 @@ class LeaguesModel:
                 
                 N: float = t.get("N", 5.0)
                 team_distance_decay : float = league_distance_decay * (5/N) 
-                # teams with higher N are less affected by distance, as they have more resources to reach fans further away
-
-                D = np.exp(-team_distance_decay * min(effective_d, 15000/N)) 
-                # very long distances are capped to avoid numerical issues and reflect that beyond a certain point,
-                #  distance doesn't matter as much (e.g. 3000 miles is not that different from 6000 miles in terms of fan support)
                 
-                DS = np.exp(-team_distance_decay * effective_d * 2)  #short term enthusiasm dissipates faster             
+                # teams with higher N are less affected by distance, as they have more resources to reach fans further away
+                D = np.exp(-team_distance_decay * min(effective_d, 15000/N)) 
+
+                #short term enthusiasm dissipates faster             
+                DS = np.exp(-team_distance_decay * effective_d * 2)  
                 
                 R[j] = ((league_weight * 10) + t["L"]  * D)  + ((league_weight * 10) + t["S"] * DS) 
 
-                distance_value_multipliers[j] = np.exp(-min(effective_d, 500) / 200) * league_weight
+                # very long distances are capped to avoid numerical issues and reflect that beyond a certain point,
+                # distance doesn't matter as much (e.g. 3000 miles is not that different from 6000 miles in terms of fan support)
+                value_multipliers[j] = np.exp(-min(effective_d, 500) / 100) * league_weight
 
             expR = np.exp(R / self.competition_temperature_base)
           
@@ -237,8 +308,8 @@ class LeaguesModel:
                 # as a county with 100k income. The 0.75 in the denominator controls how quickly the returns diminish.
                 income_mult = income_rel / (income_rel + 0.75)
                 share_population_value = share_population\
-                    * distance_value_multipliers[j]\
-                    * income_mult
+                    * income_mult\
+                    * value_multipliers[j]
 
                 if dataframe_out_by_team .get(t["name"]) is None:
                     dataframe_out_by_team[t["name"]] = {
@@ -251,6 +322,9 @@ class LeaguesModel:
                         "color": t.get("color", None)
                     }
                 dataframe_out = dataframe_out_by_team[t["name"]]
+                # If there are "virtual" teams representing a historical location or minor league presence, 
+                # we want to take the max share across all teams representing that location, rather than summing,
+                # as they are not additive in terms of fan support.                 
                 dataframe_out["share"] = max(dataframe_out["share"], shares[j])
                 dataframe_out["share_population"] = max(dataframe_out["share_population"], share_population)
                 dataframe_out["share_population_value"] = max(dataframe_out["share_population_value"], share_population_value)
@@ -432,6 +506,12 @@ class LeaguesModel:
 
     def copy_with_just_league(self, league_name: str):
         leagues_model = LeaguesModel()
+        leagues_model.competition_temperature_base = self.competition_temperature_base
+        leagues_model.non_us_multiplier = self.non_us_multiplier
+        leagues_model.not_nearest_multiplier = self.not_nearest_multiplier
+        leagues_model.not_same_state_multiplier = self.not_same_state_multiplier
+        leagues_model.canada_multiplier = self.canada_multiplier
+        leagues_model.distance_decay_numerator = self.distance_decay_numerator
         leagues_model._county_dataframe = self._county_dataframe
         leagues_model._us_median_income = self._us_median_income
         leagues_model.load_counties_geojson()
@@ -484,4 +564,40 @@ class LeaguesModel:
                 pl.col("share_population_value_change").map_elements(formatter).alias("share_population_value_change")
             ]), paging=False, pageLength=100)
             itables.show(total)
+
+class Simulation:
+    current_model: LeaguesModel
+    prior_model: LeaguesModel
+
+    def __init__(self):
+        self.current_model = LeaguesModel()
+        self.current_model.load_counties_geojson()
+        self.current_model.load_counties_data()
+
+    def add_league(self, league_name: str):
+        self.current_model.load_leagues([league_name])
+        self.current_model.calculate_league_distances(league_name)
+        self.current_model.compute_league_shares(league_name)
         
+    def render_current_model(self, league_name: str):
+        self.current_model.heatmap_counties(league_name)
+        return self.current_model.render_map(league_name)  
+    
+    def apply_changes(self, league_name: str, mutator: Callable[LeaguesModel, None]):
+        self.prior_model = self.current_model
+        self.current_model = self.prior_model.copy_with_just_league(league_name)
+        mutator(self.current_model)
+        self.current_model.calculate_league_distances(league_name)
+        self.current_model.compute_league_shares(league_name)
+
+    def relocate_team(self, league_name: str, team_name: str, new_team:Team):
+        self.apply_changes(league_name, lambda model: model.update_team(league_name, team_name, new_team))
+
+    def add_teams(self, league_name: str, new_teams: list[Team]):
+        self.apply_changes(league_name, lambda model: model.add_teams(league_name, new_teams))
+
+    def show_comparisons(self, league_name: str):
+        if self.prior_model:
+            self.prior_model.show_pre_post_merged_results(league_name, self.current_model)
+
+
