@@ -116,6 +116,7 @@ class LeaguesModel:
     not_same_state_multiplier : float = 2 # distance multiplied if team is not in the same state as the county. 
     canada_multiplier : float = 2 # an additional multiplier if the team is in Canada, as it's even less likely for a county to support a team from another country    
     distance_decay_numerator : float = 0.0025 # multiplied by league weight and divided by team N to get distance decay factor
+    use_haversine_distance = True
 
     def load_counties_geojson(self):
         with open("./counties.geojson") as f:
@@ -164,59 +165,32 @@ class LeaguesModel:
     def add_league(self, league_data:League):
         self._leagues = { league_data["league_name"]: league_data }
 
-    def line_lengths(self, p1, p2, sindex, counties):
+    def line_lengths(self, p1, p2, the_us, states, sindex):
         # p1, p2 are (lat, lon)
         # --- 1. Build line in projected space ---
-        line_wgs84 = LineString([p1, p2])
+        line = transform(crs_transformer.transform, LineString([p1, p2]))
 
-        line = transform(crs_transformer.transform, line_wgs84)
+        candidates = states.iloc[list(sindex.intersection(line.bounds))]
 
-        total_length = line.length
+        if the_us.contains(line):
+            return line.length * METERS_TO_MILES, 0
 
-        # --- 2. Spatial index query (bounding box filter) ---
-        candidate_idx = list(sindex.intersection(line.bounds))
-    
-        if not candidate_idx:
-            # No counties nearby → all non_us
-            miles = total_length * METERS_TO_MILES
-            return miles, miles
-
-        candidates = counties.iloc[candidate_idx]
-
-        # --- 3. Precise intersection with candidates ---
-        land_parts = []
-
-        for geom in candidates.geometry:
-            part = line.intersection(geom)
-            if not part.is_empty:
-                land_parts.append(part)
-
-        # --- 4. Merge to avoid double counting ---
-        if land_parts:
-            land_union = unary_union(land_parts)
-            land_length = land_union.length
-        else:
-            land_length = 0.0
-
-        non_us_length = total_length - land_length
-
-        # --- 5. Convert to miles ---
-        total_miles = total_length * METERS_TO_MILES
-        non_us_miles = non_us_length * METERS_TO_MILES
-
-        return total_miles, non_us_miles    
+        us_part = line.intersection(the_us)
+ 
+        return line.length * METERS_TO_MILES, (line.length - us_part.length) * METERS_TO_MILES
 
     def calculate_league_distances(self, league_name):
         counties = gpd.read_file("counties.geojson")
 
         # --- Project counties to EPSG:5070 ---
-        #counties_crs = counties.to_crs(epsg=5070)
-
-        # Optional but HIGHLY recommended: simplify
-        #counties_crs["geometry"] = counties.geometry.simplify(1000, preserve_topology=True)
-
+        counties_crs = counties.to_crs(epsg=5070)
+        # 2. Dissolve to states
+        states = counties_crs.dissolve(by="STATEFP", aggfunc="first").reset_index()
+        # 3. (Optional) simplify AFTER dissolve
+        states["geometry"] = states.simplify(5000, preserve_topology=True) 
         # --- Build spatial index ---
-        #sindex = counties_crs.sindex
+        sindex = states.sindex
+        the_us = unary_union(states.geometry).simplify(tolerance=5000, preserve_topology=True)
 
         teams = self._leagues[league_name]["teams"]
         
@@ -228,18 +202,19 @@ class LeaguesModel:
             centroid = self._counties_centroids.get((c["STATE"], c["COUNTY"]))
             if centroid:
                 for j, t in enumerate(teams):
-                    d[i, j] = haversine_miles(
-                        centroid,
-                        t["coordinates"]["lat"],
-                        t["coordinates"]["lon"]
-                    )
-                    # distances = self.line_lengths(
-                    #     Point(centroid.x, centroid.y),
-                    #     Point(t["coordinates"]["lon"], t["coordinates"]["lat"]),
-                    #     sindex, 
-                    #     counties_crs
-                    # )
-                    # d[i, j] = distances[0] + distances[1] * self.non_us_multiplier                                        
+                    if self.use_haversine_distance:
+                        d[i, j] = haversine_miles(
+                            centroid,
+                            t["coordinates"]["lat"],
+                            t["coordinates"]["lon"]
+                        )
+                    else:
+                        distances = self.line_lengths(
+                         Point(centroid.x, centroid.y),
+                         Point(t["coordinates"]["lon"], t["coordinates"]["lat"]),
+                         the_us, states, sindex
+                        )
+                        d[i, j] = distances[0] + distances[1] * self.non_us_multiplier                                        
    
         self._leagues[league_name]["distances"] = d       
 
@@ -506,6 +481,7 @@ class LeaguesModel:
 
     def copy_with_just_league(self, league_name: str):
         leagues_model = LeaguesModel()
+        leagues_model.use_haversine_distance = self.use_haversine_distance
         leagues_model.competition_temperature_base = self.competition_temperature_base
         leagues_model.non_us_multiplier = self.non_us_multiplier
         leagues_model.not_nearest_multiplier = self.not_nearest_multiplier
@@ -578,26 +554,33 @@ class Simulation:
         self.current_model.load_leagues([league_name])
         self.current_model.calculate_league_distances(league_name)
         self.current_model.compute_league_shares(league_name)
+
+    def refresh_current_model(self, league_name: str):
+        self.current_model.heatmap_counties(league_name)
+        self.current_model.refresh_geojson_layer()
         
     def render_current_model(self, league_name: str):
         self.current_model.heatmap_counties(league_name)
         return self.current_model.render_map(league_name)  
     
-    def apply_changes(self, league_name: str, mutator: Callable[LeaguesModel, None]):
-        self.prior_model = self.current_model
-        self.current_model = self.prior_model.copy_with_just_league(league_name)
+    def apply_changes(self, league_name: str, mutator: Callable[LeaguesModel, None], same_map = False):
+        if same_map:
+            self.prior_model = self.current_model.copy_with_just_league(league_name)
+        else:
+            self.prior_model = self.current_model
+            self.current_model = self.prior_model.copy_with_just_league(league_name)
         mutator(self.current_model)
         self.current_model.calculate_league_distances(league_name)
         self.current_model.compute_league_shares(league_name)
 
-    def relocate_team(self, league_name: str, team_name: str, new_team:Team):
-        self.apply_changes(league_name, lambda model: model.update_team(league_name, team_name, new_team))
+    def update_team(self, league_name: str, team_name: str, new_team:Team, same_map = False):
+        self.apply_changes(league_name, lambda model: model.update_team(league_name, team_name, new_team), same_map)
 
-    def add_teams(self, league_name: str, new_teams: list[Team]):
-        self.apply_changes(league_name, lambda model: model.add_teams(league_name, new_teams))
+    def add_teams(self, league_name: str, new_teams: list[Team], same_map = False):
+        self.apply_changes(league_name, lambda model: model.add_teams(league_name, new_teams), same_map)
 
     def show_comparisons(self, league_name: str):
         if self.prior_model:
-            self.prior_model.show_pre_post_merged_results(league_name, self.current_model)
+           self.prior_model.show_pre_post_merged_results(league_name, self.current_model)
 
 
