@@ -15,6 +15,9 @@ RUN pip install voila
 RUN pip install itables
 RUN pip install panel
 RUN pip install ipywidgets_bokeh
+RUN pip install pyarrow
+RUN pip install geopandas
+RUN pip install pyproj
 
 # Make port 8888 available to the world outside this container
 EXPOSE 8866

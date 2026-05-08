@@ -1,6 +1,5 @@
 import json
 import sys
-import shapely
 import numpy as np
 import polars as pl
 import ipywidgets as widgets
@@ -58,20 +57,10 @@ class Feature(TypedDict):
 class CountiesGEOJson(TypedDict):
     features: list[Feature]
 
-crs_transformer = Transformer.from_crs("EPSG:4326", "EPSG:5070", always_xy=True)
+crs5070_transformer = Transformer.from_crs("EPSG:4326", "EPSG:5070", always_xy=True)
+crs4326_transformer = Transformer.from_crs("EPSG:5070", "EPSG:4326", always_xy=True)
 
 METERS_TO_MILES = 0.000621371    
-
-def haversine_miles(centroid, lat2, lon2):
-    r = 3958.8  # earth radius miles
-    lat1 = centroid.y
-    lon1 = centroid.x
-    phi1 = np.radians(lat1)
-    phi2 = np.radians(lat2)
-    dphi = phi2 - phi1
-    dlambda = np.radians(lon2 - lon1)
-    a = np.sin(dphi/2.0)**2 + np.cos(phi1)*np.cos(phi2)*np.sin(dlambda/2.0)**2
-    return 2*r*np.arcsin(np.sqrt(a))
 
 def opacity_for_population(share_population_value): 
     if share_population_value > 5000000:
@@ -100,11 +89,9 @@ def league_teams_sums(league_data) -> pl.DataFrame:
             .sort('share_population_value', descending=True)
 
 class LeaguesModel:
+    _counties_gdf: gpd.GeoDataFrame
     _counties_geojson: CountiesGEOJson
-    _counties_centroids: dict[tuple[str, str], shapely.geometry.Point] = { }
-    _counties_median_incomes: dict[str, float] = { }
     _leagues: Leagues = { }
-    _county_dataframe: pl.DataFrame  
     _us_median_income: float
 
     _geojson_layer: GeoJSON = None
@@ -116,37 +103,28 @@ class LeaguesModel:
     not_same_state_multiplier : float = 2 # distance multiplied if team is not in the same state as the county. 
     canada_multiplier : float = 2 # an additional multiplier if the team is in Canada, as it's even less likely for a county to support a team from another country    
     distance_decay_numerator : float = 0.0025 # multiplied by league weight and divided by team N to get distance decay factor
-    use_haversine_distance = True
+    use_direct_distance = True
 
-    def load_counties_geojson(self):
-        with open("./counties.geojson") as f:
-            self._counties_geojson =  json.load(f)
-        
     def load_counties_data(self):
-        self._county_dataframe = pl.read_csv("./co-est2024-alldata.csv", encoding="iso-8859-1")
+        gdf = gpd.read_file("counties.geojson").set_index("GEOID").to_crs(epsg=5070)
 
-        co_income_dataframe: pl.DataFrame = pl.read_csv("./Income2023.csv", encoding="iso-8859-1")
+        county_dataframe: pl.DataFrame = pl.read_csv("./co-est2024-alldata.csv", encoding="iso-8859-1")\
+            .with_columns((
+                pl.col("STATE") * 1000 + pl.col("COUNTY")
+        ).cast(pl.Int64).alias("GEOID"))
 
-        for row in co_income_dataframe.iter_rows(named=True):
-            self._counties_median_incomes[row["FIPS_Code"]] = row["Median_Household_Income"]
+        co_income_dataframe: pl.DataFrame = pl.read_csv("./Income2023.csv", encoding="iso-8859-1")\
+            .with_columns((
+                pl.col("FIPS_Code").cast(pl.Int64)
+        ).alias("GEOID"))      
 
-        self._us_median_income :float = self._counties_median_incomes[0]
-
-        for feature in self._counties_geojson["features"]:
-            coords_stack = [ feature["geometry"]["coordinates"] ]
-
-            while isinstance(coords_stack[-1][0], list):
-                coords_stack.append(coords_stack[-1][0]) 
-
-            coords = coords_stack[-2]    
-            try: 
-                raw_polygon = shapely.geometry.Polygon(coords) 
-                state : str = feature["properties"]["STATEFP"]
-                county : str = feature["properties"]["COUNTYFP"]
-                self._counties_centroids[(state, county)] = raw_polygon.centroid
-            except Exception as e:
-                print(e)
-                print("Invalid coordinates:", feature["properties"]["Name"])  
+        self._us_median_income :float = co_income_dataframe.filter(pl.col("Area_Name") == "United States")["Median_Household_Income"].item()
+        gdf = gdf.merge(county_dataframe.to_pandas(), on="GEOID", how="left").merge(co_income_dataframe.to_pandas(), on="GEOID", how="left")
+        # only consider the contiguous US for distance calculations, as Alaska and Hawaii are outliers
+        gdf = gdf[(gdf["STNAME"] != "Alaska") & (gdf["STNAME"] != "Hawaii")]\
+            [["GEOID", "STNAME", "CTYNAME", "geometry", "POPESTIMATE2020", "Median_Household_Income"]]
+        gdf["centroid"] = gdf.centroid 
+        self._counties_gdf = gdf
 
     def read_league(self, league_name: str):
         with open(f"./teams_{league_name}.json") as f:
@@ -165,56 +143,41 @@ class LeaguesModel:
     def add_league(self, league_data:League):
         self._leagues = { league_data["league_name"]: league_data }
 
-    def line_lengths(self, p1, p2, the_us, states, sindex):
+    def line_lengths(self, p1, p2, the_us):
         # p1, p2 are (lat, lon)
-        # --- 1. Build line in projected space ---
-        line = transform(crs_transformer.transform, LineString([p1, p2]))
-
-        candidates = states.iloc[list(sindex.intersection(line.bounds))]
-
-        if the_us.contains(line):
-            return line.length * METERS_TO_MILES, 0
+        line = LineString([p1, p2])
 
         us_part = line.intersection(the_us)
  
         return line.length * METERS_TO_MILES, (line.length - us_part.length) * METERS_TO_MILES
 
     def calculate_league_distances(self, league_name):
-        counties = gpd.read_file("counties.geojson")
-
-        # --- Project counties to EPSG:5070 ---
-        counties_crs = counties.to_crs(epsg=5070)
-        # 2. Dissolve to states
-        states = counties_crs.dissolve(by="STATEFP", aggfunc="first").reset_index()
-        # 3. (Optional) simplify AFTER dissolve
+        # Dissolve to states
+        states = self._counties_gdf.dissolve(by="STNAME", aggfunc="first").reset_index()
+        # (Optional) simplify AFTER dissolve
         states["geometry"] = states.simplify(5000, preserve_topology=True) 
-        # --- Build spatial index ---
-        sindex = states.sindex
+
         the_us = unary_union(states.geometry).simplify(tolerance=5000, preserve_topology=True)
 
         teams = self._leagues[league_name]["teams"]
+
+        for team in teams:
+            p_wgs84 = Point(team["coordinates"]["lon"], team["coordinates"]["lat"])
+            team["coordinates_point"] = transform(crs5070_transformer.transform, p_wgs84)
         
-        counties = self._county_dataframe.to_dicts()
+        d = np.zeros((len(self._counties_gdf), len(teams)))
 
-        d = np.zeros((len(counties), len(teams)))
-
-        for i, c in enumerate(counties):
-            centroid = self._counties_centroids.get((c["STATE"], c["COUNTY"]))
-            if centroid:
-                for j, t in enumerate(teams):
-                    if self.use_haversine_distance:
-                        d[i, j] = haversine_miles(
-                            centroid,
-                            t["coordinates"]["lat"],
-                            t["coordinates"]["lon"]
-                        )
-                    else:
-                        distances = self.line_lengths(
-                         Point(centroid.x, centroid.y),
-                         Point(t["coordinates"]["lon"], t["coordinates"]["lat"]),
-                         the_us, states, sindex
-                        )
-                        d[i, j] = distances[0] + distances[1] * self.non_us_multiplier                                        
+        for i, row in enumerate(self._counties_gdf.itertuples()):
+          if not row.centroid.is_empty:
+            for j, t in enumerate(teams):
+                if self.use_direct_distance:
+                    d[i, j] = row.centroid.distance(t["coordinates_point"]) * METERS_TO_MILES         
+                else:
+                    distances = self.line_lengths(
+                        row.centroid,
+                        t["coordinates_point"],
+                        the_us)
+                    d[i, j] = distances[0] + distances[1] * self.non_us_multiplier                                        
    
         self._leagues[league_name]["distances"] = d       
 
@@ -230,12 +193,10 @@ class LeaguesModel:
 
         dataframe_map : dict[str, pl.DataFrame] = { }
 
-        counties = self._county_dataframe.to_dicts()
-
-        for i, c in enumerate(counties):
+        for i, row in enumerate(self._counties_gdf.itertuples()):
             nearest_d = d[i].min()
             nearest_effective_d = 1000000
-            county_state = c["STNAME"]
+            county_state = row.STNAME
             R = np.zeros_like(d[i])
 
             value_multipliers = np.zeros_like(d[i])
@@ -276,8 +237,8 @@ class LeaguesModel:
 
             dataframe_out_by_team = {}
             for j, t in enumerate(self._leagues[league]["teams"]):                
-                share_population = c["POPESTIMATE2020"] * shares[j]
-                income_rel = self._counties_median_incomes[c["STATE"] * 1000 + c["COUNTY"]] / self._us_median_income 
+                share_population = row.POPESTIMATE2020 * shares[j]
+                income_rel = row.Median_Household_Income / self._us_median_income 
                 # if the county has higher income than median, it is more valuable to the team, as they can spend more on tickets,
                 # merchandise, etc. However, this effect has diminishing returns, as a county with 200k income is not twice as valuable
                 # as a county with 100k income. The 0.75 in the denominator controls how quickly the returns diminish.
@@ -288,8 +249,8 @@ class LeaguesModel:
 
                 if dataframe_out_by_team .get(t["name"]) is None:
                     dataframe_out_by_team[t["name"]] = {
-                        "county": c["CTYNAME"],
-                        "state": c["STNAME"],
+                        "county": row.CTYNAME,
+                        "state": row.STNAME,
                         "team_name": t["name"],
                         "share": 0,
                         "share_population": 0,
@@ -306,7 +267,7 @@ class LeaguesModel:
             
             dataframe_out = list(dataframe_out_by_team.values())
 
-            dataframe_map[(c["STATE"], c["COUNTY"])] = pl.DataFrame(dataframe_out)
+            dataframe_map[row.GEOID] = pl.DataFrame(dataframe_out)
 
         self._leagues[league]["output_dataframe_map"] = dataframe_map
       
@@ -323,15 +284,17 @@ class LeaguesModel:
             "fillOpacity": 0.0,
         }
 
+        with open("./counties.geojson") as f:
+            self._counties_geojson =  json.load(f)
+
         for feature in self._counties_geojson["features"]:
             feature["properties"]["style"] = default_style    
 
     def heatmap_counties(self, league_name: str, share_threshold = 0.01): 
         self.reset_county_styles()
         for feature in self._counties_geojson["features"]:
-            state = feature["properties"]["STATEFP"]
-            county = feature["properties"]["COUNTYFP"]
-            county_rows = self._leagues[league_name]["output_dataframe_map"].get((state, county))
+            GEOID = feature["properties"]["GEOID"]
+            county_rows = self._leagues[league_name]["output_dataframe_map"].get(GEOID)
             if not county_rows is None and county_rows.shape[0] > 0:
                 county_row = dict(zip(county_rows.columns, county_rows.sort("share_population_value", descending=True).row(0)))
                 if county_row["share"] > share_threshold:   
@@ -344,17 +307,16 @@ class LeaguesModel:
     
     def create_show_teams(self, leaflet_map:Map, popup_leagues:Leagues):
         def show_teams(event, feature, **kwargs): 
-            statefp = feature["properties"]["STATEFP"]
-            countyfp = feature["properties"]["COUNTYFP"]
-            row = self._county_dataframe.filter((pl.col("STATE") == statefp) & (pl.col("COUNTY") == countyfp))
-            centroid = self._counties_centroids[(statefp, countyfp)]
-            population = row["POPESTIMATE2020"].item(0)
+            geoid = feature["properties"]["GEOID"]
+            row = self._counties_gdf[self._counties_gdf["GEOID"] == geoid].iloc[0]
+            centroid = transform(crs4326_transformer.transform, row.centroid)
+            population = row.POPESTIMATE2020
 
             all_county_rows = pl.DataFrame()    
             leagues_rows = ""  
             try:
                 for league in popup_leagues.keys():
-                    county_rows = self._leagues[league]["output_dataframe_map"][(statefp, countyfp)][["team_name", 'state', "share_population", "share_population_value", "share"]]
+                    county_rows = self._leagues[league]["output_dataframe_map"][geoid][["team_name", 'state', "share_population", "share_population_value", "share"]]
                     county_rows = county_rows.group_by(['team_name', 'state']).sum() 
                     county_rows = county_rows.with_columns(pl.lit(league).alias("league"))
                     all_county_rows = pl.concat([all_county_rows, county_rows])
@@ -481,16 +443,15 @@ class LeaguesModel:
 
     def copy_with_just_league(self, league_name: str):
         leagues_model = LeaguesModel()
-        leagues_model.use_haversine_distance = self.use_haversine_distance
+        leagues_model.use_direct_distance = self.use_direct_distance
         leagues_model.competition_temperature_base = self.competition_temperature_base
         leagues_model.non_us_multiplier = self.non_us_multiplier
         leagues_model.not_nearest_multiplier = self.not_nearest_multiplier
         leagues_model.not_same_state_multiplier = self.not_same_state_multiplier
         leagues_model.canada_multiplier = self.canada_multiplier
         leagues_model.distance_decay_numerator = self.distance_decay_numerator
-        leagues_model._county_dataframe = self._county_dataframe
         leagues_model._us_median_income = self._us_median_income
-        leagues_model.load_counties_geojson()
+        leagues_model._counties_gdf = self._counties_gdf.copy()
         leagues_model._leagues =  { 
             league_name: {           
                 "weight": self._leagues[league_name]["weight"],
@@ -547,7 +508,6 @@ class Simulation:
 
     def __init__(self):
         self.current_model = LeaguesModel()
-        self.current_model.load_counties_geojson()
         self.current_model.load_counties_data()
 
     def add_league(self, league_name: str):
