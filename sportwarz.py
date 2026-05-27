@@ -149,7 +149,7 @@ class LeaguesModel:
 
         us_part = line.intersection(the_us)
  
-        return line.length * METERS_TO_MILES, (line.length - us_part.length) * METERS_TO_MILES
+        return us_part.length * METERS_TO_MILES, (line.length - us_part.length) * METERS_TO_MILES
 
     def calculate_league_distances(self, league_name):
         # Dissolve to states
