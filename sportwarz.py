@@ -85,7 +85,16 @@ class LeaguesModel:
                 self._leagues[league["league_name"]] = league
 
     def compute_league_shares(self, league_name):
-        league_data = self.league_stats_calculator.load_league(self._leagues[league_name])
+        import os
+        endpoint = os.getenv("REST_CALCULATOR_ENDPOINT")
+        if endpoint: # USE REST CALCULATOR
+            import requests
+            response = requests.post(endpoint, json=self._leagues[league_name])
+            league_data = response.json()
+            league_data["county_stats_by_geoid"] = {int(geoid): value for geoid, value in league_data["county_stats_by_geoid"].items()}
+        else: # USE RUST CALCULATOR
+            league_data = self.league_stats_calculator.load_league(self._leagues[league_name])
+
         self._leagues_calculations[league_data["league_name"]] = league_data["county_stats_by_geoid"]
 
     def reset_county_styles(self):
