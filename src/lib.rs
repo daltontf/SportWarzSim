@@ -16,6 +16,7 @@ mod pyrust {
     use std::collections::HashMap;
     use std::fs;
     use std::fs::File;
+    use std::io::BufReader;
     use std::time::Instant;
     use wkt::TryFromWkt;
 
@@ -73,8 +74,14 @@ mod pyrust {
         teams: Vec<Team>,
     }
 
+    #[derive(Serialize,Deserialize)]
+    struct State4326 {
+        stname: String,
+        geometry: Geometry,
+    }
+
     #[derive(Serialize)]
-    struct TeamStats {
+        struct TeamStats {
         team_name: String,
         share: f64,
         share_population: f64,
@@ -112,6 +119,7 @@ mod pyrust {
         all_data: Vec<CountyAll>,
         us_median_income: f64,
         geos_us: geos::Geometry,
+        state_geometries: Vec<State4326>
     }
 
     #[pymethods]
@@ -131,6 +139,21 @@ mod pyrust {
             let us_geometry_geojson: GeoJson = us_geometry_text.parse().unwrap();
             let us_geometry: Geometry = us_geometry_geojson.try_into().unwrap();
             let geos_us: geos::Geometry = (&us_geometry).try_into().unwrap();
+
+            // let file_reader = BufReader::new(File::open("states-4326.geojson").unwrap());
+            // Create a Vec of Country structs from the GeoJSON
+            // let state_geometries: Vec<State4326> = geojson::de::deserialize_feature_collection_to_vec::<State4326>(file_reader)
+            //     .unwrap()
+            //     .into_iter()
+            //     .collect();
+            let states_reader = BufReader::new(File::open("states-4326.geojson").unwrap());    
+            let features: geojson::FeatureCollection =  serde_json::from_reader(states_reader).unwrap();
+            let state_geometries: Vec<State4326> = features.features.into_iter().map(|feature| {
+                let stname = feature.properties.as_ref().unwrap().get("stname").unwrap().as_str().unwrap().to_string();
+                let geometry = feature.geometry.unwrap().value.try_into().unwrap();
+                State4326 { stname, geometry }
+            }).collect();
+
             Self {
                 outside_lower48_multiplier: 2.0,
                 not_nearest_multiplier: 2.0,
@@ -139,7 +162,8 @@ mod pyrust {
                 competition_temperature_base: 1.25,
                 all_data,
                 us_median_income,
-                geos_us
+                geos_us,
+                state_geometries
             }
         }
 
@@ -274,6 +298,20 @@ mod pyrust {
             };
 
             pythonize(py, &league_stats).unwrap().into()
+        }
+    
+
+        fn lookup_state_name_by_coordinates(&self, latitude: f64, longitude: f64) -> Option<String> {
+            let point = Point::new(longitude, latitude); // Note: GeoJSON uses (lon, lat) order
+
+            for state in &self.state_geometries {
+                if let Ok(geos_geometry) = geos::Geometry::try_from(&state.geometry) {
+                    if geos_geometry.contains(&geos::Geometry::try_from(&point).unwrap()).unwrap() {
+                        return Some(state.stname.clone());
+                    }
+                }
+            }
+            None
         }
     }
 }
