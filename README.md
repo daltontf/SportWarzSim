@@ -128,7 +128,8 @@ Hypothetical mergers could be simulated. What if Houston and Cincinnati also joi
 
 #### Quirks that trickier to mitigate
 
-- Distances are direct "as the crow flies". This leads to quirks where teams in western Michigan are more loyal to Green Bay or Milwaukee than they likely are. Particular around bodies of water is one place this kind of stuff occurs
+- ~~Distances are direct "as the crow flies". This leads to quirks where teams in western Michigan are more loyal to Green Bay or Milwaukee than they likely are. Particular around bodies of water is one place this kind of stuff occurs~~.
+This has been taken care thought it needed more horsepower than Python can provide (Rust). To keep things fast the model is focused on the lower-48 of the US. Any parts of a line between a county and a venue that leaves the lower-48 whether going over water or Canada as effective distance increased.
 
 - A farther market may be easier to travel to. Springfield Missouri is closer to Kansas City than St. Louis, but has more Cardinals fans. Recently the Cardinals put a AA affiliate there but I-44 is a factor. This is a bit mitigated by the having the AA team in the data.
 
