@@ -254,21 +254,7 @@ class LeaguesModel:
                (pl.col("share_population_value_after") - pl.col("share_population_value_before")).alias("share_population_value_change")
             ])
         
-        formatter = lambda x: f"{x:,.0f}"
-        
-        total = merged.select([
-              pl.sum("share_population_value_before"),
-              pl.sum("share_population_value_after"),
-              pl.sum("share_population_value_change"),
-            ]).with_columns([
-                pl.col("share_population_value_before").map_elements(formatter).alias("share_population_value_before"),
-                pl.col("share_population_value_after").map_elements(formatter).alias("share_population_value_after"),
-                pl.col("share_population_value_change").map_elements(formatter).alias("share_population_value_change")
-            ]).rename({
-                "share_population_value_before": "Total Population Value Before",
-                "share_population_value_after": "Total Population Value After",
-                "share_population_value_change": "Total Population Value Change"
-            })
+        formatter = lambda x: f"{x:,.0f}"       
 
         with pl.Config(float_precision=0):
             itables.show(merged.with_columns([
@@ -279,6 +265,21 @@ class LeaguesModel:
                 pl.col("share_population_change").map_elements(formatter).alias("share_population_change"),
                 pl.col("share_population_value_change").map_elements(formatter).alias("share_population_value_change")
             ]), paging=False, pageLength=100)
+
+            total = merged.select([
+                pl.sum("share_population_value_before"),
+                pl.sum("share_population_value_after"),
+                pl.sum("share_population_value_change"),
+            ]).with_columns([
+                pl.col("share_population_value_before").map_elements(formatter).alias("share_population_value_before"),
+                pl.col("share_population_value_after").map_elements(formatter).alias("share_population_value_after"),
+                pl.col("share_population_value_change").map_elements(formatter).alias("share_population_value_change")
+            ]).rename({
+                "share_population_value_before": "Total Population Value Before",
+                "share_population_value_after": "Total Population Value After",
+                "share_population_value_change": "Total Population Value Change"
+            })
+
             itables.show(total)
 
 class Simulation:
