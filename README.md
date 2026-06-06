@@ -27,21 +27,26 @@ The term “Warz” comes from a related idea: a strategy simulation game in whi
 #### Running 
 
 - Currently, the model is implemented as a Jupyter notebook served via Voila.
-(Still searching for a reliable and inexpensive permanent hosting option.)
 
 - You can also run it via Docker:
 
 ```
 docker pull daltontf1212/sportwarzsim:latest
-
+```
+```
 docker run -p 8866:8866 daltontf1212/sportwarzsim:latest
 ```
 
 Navigate to http://localhost:8866/
 
+
+It is currently deployed on an EC2 [instance](http://54.236.126.57:8866/). There was problems scaling the calculations so that work is done via an AWS Lambda. Heat map calculations will take about 20 seconds which is likely slower that running locally (unless one has some old hardware).
+
+
+
 #### Notebooks
 
-There are notebooks simulating various scenarios included at the root path. It quickly got unwieldy with led to the creation which provides a  more interactive experience. [Link to documentation](./Blank.md)
+There are notebooks simulating various scenarios included at the root path. It quickly got unwieldy with led to the creation which provides a more interactive experience. [Link to documentation](./Interactive.md)
 
 #### Things taken into account:
 
