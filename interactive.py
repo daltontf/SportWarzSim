@@ -40,7 +40,6 @@ class Interactive:
         self.calculator = pyrust.LeagueStatsCalculator() 
 
 
-
     def opacity_for_population(self, share_population_value): 
         if share_population_value > 5000000:
             return 0.9
@@ -84,36 +83,6 @@ class Interactive:
                     "fillColor": county_top_team_data["color"] ,
                     "fillOpacity": self.opacity_for_population(county_top_team_data["share_population_value"])
                 }               
-
-    def create_show_teams(self, leaflet_map:Map, league_county_map: dict):
-        def show_teams(event, feature, **kwargs): 
-            coordinates = kwargs.get("coordinates")
-            geoid = feature["properties"]["geoid"]
-            county_data = league_county_map[geoid]
-            county_team_data = county_data["team_stats"]
-            leagues_rows = ""  
-            for i, county_team_row in enumerate(county_team_data):
-                if county_team_row["share"] > 1/len(county_team_data):
-                    leagues_rows += f'''
-                    <tr>  
-                        <td>{county_team_row['team_name']}</td> 
-                        <td>{county_team_row['share_population']:,.0f}</td> 
-                        <td>{county_team_row['share_population_value']:,.0f}</td> 
-                    </tr>'''
-
-            popup = Popup(location = coordinates, max_width=500,
-                child=widgets.HTML(f'''
-                <table style="border-collapse: collapse;">
-                    <caption>{feature["properties"]["name"]} - Pop: {county_data["population"]:,.0f}</caption>
-                    <tr>
-                        <th>Team</th>
-                        <th>Pop. Share</th>
-                        <th>Pop. Value</th>
-                    </tr>
-                {leagues_rows}
-                </table>'''))  
-            leaflet_map.add(popup)
-        return show_teams  
     
     def league_teams_sums(self, county_data) -> pl.DataFrame:
         all_teams = pl.DataFrame([x for county in county_data.values() for x in county["team_stats"]])
@@ -194,6 +163,41 @@ class Interactive:
         return result    
 
     def render_map(self):
+        def create_show_teams(leaflet_map:Map, league_county_map: dict):
+            def show_teams(event, feature, **kwargs): 
+                coordinates = kwargs.get("coordinates")
+                geoid = feature["properties"]["geoid"]
+                county_data = league_county_map[geoid]
+                county_team_data = county_data["team_stats"]
+                leagues_rows = ""  
+                for i, county_team_row in enumerate(county_team_data):
+                    if county_team_row["share"] > 1/len(county_team_data):
+                        leagues_rows += f'''
+                        <tr>  
+                            <td>{county_team_row['team_name']}</td> 
+                            <td>{county_team_row['share_population']:,.0f}</td> 
+                            <td>{county_team_row['share_population_value']:,.0f}</td> 
+                        </tr>'''
+
+                nonlocal current_popup                
+                if current_popup is not None:
+                    map.remove(current_popup)        
+
+                current_popup = Popup(location = coordinates, max_width=500,
+                    child=widgets.HTML(f'''
+                    <table style="border-collapse: collapse;">
+                        <caption>{feature["properties"]["name"]} - Pop: {county_data["population"]:,.0f}</caption>
+                        <tr>
+                            <th>Team</th>
+                            <th>Pop. Share</th>
+                            <th>Pop. Value</th>
+                        </tr>
+                    {leagues_rows}
+                    </table>'''))  
+            
+                leaflet_map.add(current_popup)
+            return show_teams      
+
         def recalculate_stats(event):
             nonlocal geojson_layer
             try:
@@ -209,7 +213,7 @@ class Interactive:
        
                 geojson_layer = GeoJSON(data = self.counties_geojson,  hover_style = {"color": "white"})
   
-                geojson_layer.on_click(self.create_show_teams(map, result["county_stats_by_geoid"]))
+                geojson_layer.on_click(create_show_teams(map, result["county_stats_by_geoid"]))
                 map.add_layer(geojson_layer)
 
                 self.show_comparisons(prior_league_calculations, result["county_stats_by_geoid"])
@@ -282,7 +286,8 @@ class Interactive:
 
             def on_delete_click(x):
                 nonlocal current_popup
-                self.league["teams"] = [t for t in self.league["teams"] if t != team]
+                # Remove team from league teams list including minor league / virtual teams with same name
+                self.league["teams"] = [t for t in self.league["teams"] if t != team and t["name"] != team["name"]]
                 map.remove(current_popup) 
                 current_popup = None
                 map.remove_layer(team["marker"])
@@ -315,7 +320,10 @@ class Interactive:
         def handle_interaction(**kwargs):
             nonlocal current_popup
             if kwargs.get("type") != "contextmenu":
-                return    
+                return  
+
+            if current_popup is not None:
+                map.remove(current_popup)  
 
             content = create_popup_for_team({
                 "name": "New Team",
@@ -378,7 +386,7 @@ class Interactive:
         self.heatmap_counties(result["county_stats_by_geoid"])
         geojson_layer.data = self.counties_geojson 
 
-        geojson_layer.on_click(self.create_show_teams(map, result["county_stats_by_geoid"]))
+        geojson_layer.on_click(create_show_teams(map, result["county_stats_by_geoid"]))
 
         map.add(geojson_layer)
         map.add(FullScreenControl())
