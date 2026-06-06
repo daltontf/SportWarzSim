@@ -21,8 +21,12 @@ class Interactive:
 
     def __init__(self, league_name: str):
         self.league_name = league_name
-        self.out = widgets.Output()
+        self.out = widgets.Output(layout = widgets.Layout(
+            height = "100%"  
+        ))
+
         os.environ["RUST_BACKTRACE"] = "1"
+
         with open(f'teams_{league_name}.json', "r") as f:
             self.league = json.load(f)
 
@@ -56,7 +60,7 @@ class Interactive:
             return 0.2
         return 0.1  
 
-    def reset_county_styles(self, counties_geojson):
+    def reset_county_styles(self):
         default_style = {
             "color": "grey",
             "weight": 1,
@@ -64,12 +68,12 @@ class Interactive:
             "fillOpacity": 0.0,
         }
 
-        for feature in counties_geojson["features"]:
+        for feature in self.counties_geojson["features"]:
             feature["properties"]["style"] = default_style
 
-    def heatmap_counties(self, counties_geojson, league_county_map: dict, share_threshold = 0.01): 
-        self.reset_county_styles(counties_geojson)
-        for feature in counties_geojson["features"]:
+    def heatmap_counties(self, league_county_map: dict, share_threshold = 0.01): 
+        self.reset_county_styles()
+        for feature in self.counties_geojson["features"]:
             geoid = feature["properties"]["geoid"]
             county_data = league_county_map[geoid]
             county_top_team_data = county_data["team_stats"][0]
@@ -121,7 +125,6 @@ class Interactive:
 
 
     def show_comparisons(self, league_calculations_prior, league_calculations_after):
-        self.out.clear_output(wait=True)
         before_sums = self.league_teams_sums(league_calculations_prior)\
             .rename({"share_population": "share_population_before", "share_population_value": "share_population_value_before"})
 
@@ -138,28 +141,38 @@ class Interactive:
 
         formatter = lambda x: f"{x:,.0f}"
     
-        itables.show(merged.with_columns([
-            pl.col("share_population_before").map_elements(formatter).alias("share_population_before"),
-            pl.col("share_population_after").map_elements(formatter).alias("share_population_after"),
-            pl.col("share_population_value_before").map_elements(formatter).alias("share_population_value_before"),
-            pl.col("share_population_value_after").map_elements(formatter).alias("share_population_value_after"),
-            pl.col("share_population_change").map_elements(formatter).alias("share_population_change"),
-            pl.col("share_population_value_change").map_elements(formatter).alias("share_population_value_change")
-        ]), paging=False, pageLength=100)
+        with self.out:
+            self.out.clear_output(wait=True)
+            itables.show(merged.with_columns([
+                pl.col("share_population_before").map_elements(formatter),
+                pl.col("share_population_after").map_elements(formatter),
+                pl.col("share_population_value_before").map_elements(formatter),
+                pl.col("share_population_value_after").map_elements(formatter),
+                pl.col("share_population_change").map_elements(formatter),
+                pl.col("share_population_value_change").map_elements(formatter)
+            ]).rename({
+               "team_name": "Team",
+               "share_population_before": "Share Population Before",
+               "share_population_after": "Share Population After",
+               "share_population_change": "Share Population Change",
+               "share_population_value_before": "Share Population Value Before",
+               "share_population_value_after": "Share Population Value After",
+               "share_population_value_change": "Share Population Value Change"
+            }), paging=False, pageLength=100)
 
-        itables.show(merged.select([
-            pl.sum("share_population_value_before"),
-            pl.sum("share_population_value_after"),
-            pl.sum("share_population_value_change"),
-        ]).with_columns([
-            pl.col("share_population_value_before").map_elements(formatter).alias("share_population_value_before"),
-            pl.col("share_population_value_after").map_elements(formatter).alias("share_population_value_after"),
-            pl.col("share_population_value_change").map_elements(formatter).alias("share_population_value_change")
-        ]).rename({
-            "share_population_value_before": "Total Population Value Before",
-            "share_population_value_after": "Total Population Value After",
-            "share_population_value_change": "Total Population Value Change"
-        }))
+            itables.show(merged.select([
+                pl.sum("share_population_value_before"),
+                pl.sum("share_population_value_after"),
+                pl.sum("share_population_value_change"),
+            ]).with_columns([
+                pl.col("share_population_value_before").map_elements(formatter),
+                pl.col("share_population_value_after").map_elements(formatter),
+                pl.col("share_population_value_change").map_elements(formatter)
+            ]).rename({
+                "share_population_value_before": "Total Population Value Before",
+                "share_population_value_after": "Total Population Value After",
+                "share_population_value_change": "Total Population Value Change"
+            }))
 
     def calculate_results(self):
         endpoint = os.getenv("REST_CALCULATOR_ENDPOINT")
@@ -181,40 +194,6 @@ class Interactive:
         return result    
 
     def render_map(self):
-        result = self.calculate_results()
-        self.leagues_data[result["league_name"]] = result["county_stats_by_geoid"]
-
-        display(widgets.HTML("""
-            <style>
-            .leaflet-popup-content-wrapper .leaflet-popup-tip {
-                background-color: black;
-                border: 2px solid black;
-            }
-            .leaflet-popup-content {
-               color: white;
-               max-height: 350px;  
-               overflow-y: auto; 
-            }
-            
-            table {
-                style="border-collapse: collapse;"
-            }
-
-            th,td {
-                padding: 0 10px;
-            }
-            </style>"""))
-
-        self.heatmap_counties(self.counties_geojson, result["county_stats_by_geoid"])
-
-        map = Map(basemap=basemaps.CartoDB.Positron, center=[38.72728229549864, -96.9010842308538], zoom=5, scroll_wheel_zoom=True)
-
-        geojson_layer = GeoJSON(data = self.counties_geojson,  hover_style = {"color": "white"})
-
-        prior_league_calculations = result["county_stats_by_geoid"]
-
-        calc_button=widgets.Button(description='Re-Calculate')
-
         def recalculate_stats(event):
             nonlocal geojson_layer
             try:
@@ -226,7 +205,7 @@ class Interactive:
  
                 result = self.calculate_results()
 
-                self.heatmap_counties(self.counties_geojson, result["county_stats_by_geoid"])
+                self.heatmap_counties(result["county_stats_by_geoid"])
        
                 geojson_layer = GeoJSON(data = self.counties_geojson,  hover_style = {"color": "white"})
   
@@ -351,13 +330,52 @@ class Interactive:
             current_popup = Popup(location=kwargs.get("coordinates"), min_width=420, max_width=420)
             current_popup.child = content
             map.add(current_popup)
+        
+        result = self.calculate_results()
+        self.leagues_data[result["league_name"]] = result["county_stats_by_geoid"]
+
+        display(widgets.HTML("""
+            <style>
+            .leaflet-popup-content-wrapper .leaflet-popup-tip {
+                background-color: black;
+                border: 2px solid black;
+            }
+            .leaflet-popup-content {
+               color: white;
+               max-height: 350px;  
+               overflow-y: auto; 
+            }
+            
+            table {
+                style="border-collapse: collapse;"
+            }
+
+            th,td {
+                padding: 0 10px;
+            }
+            </style>"""))
+
+        self.heatmap_counties(result["county_stats_by_geoid"])
+
+        map = Map(
+            basemap=basemaps.CartoDB.Positron,
+            center=[38.72728229549864, -96.9010842308538],
+            zoom=5,
+            layout=widgets.Layout(width="100%", height="600px"),
+            scroll_wheel_zoom=True)
+
+        geojson_layer = GeoJSON(data = self.counties_geojson,  hover_style = {"color": "white"})
+
+        prior_league_calculations = result["county_stats_by_geoid"]
+
+        calc_button=widgets.Button(description='Re-Calculate')
 
 
         for team in self.league["teams"]:
             if "color" in team:
                 map.add(create_marker_for_team(team))
 
-        self.heatmap_counties(self.counties_geojson, result["county_stats_by_geoid"])
+        self.heatmap_counties(result["county_stats_by_geoid"])
         geojson_layer.data = self.counties_geojson 
 
         geojson_layer.on_click(self.create_show_teams(map, result["county_stats_by_geoid"]))
