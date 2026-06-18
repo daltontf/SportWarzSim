@@ -1,8 +1,10 @@
-name: Build and Export Docker Image
+name: Build and Export Docker Image for jupyter sub-project.
 
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'jupyter/**'
   workflow_dispatch: # allows manual trigger
 
 jobs:
@@ -18,7 +20,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -f docker/Dockerfile -t sportwarzsim:latest .
+          docker build -f jupyter/docker/Dockerfile -t sportwarzsim:latest jupyter
 
       - name: Save Docker image as tar
         run: |
