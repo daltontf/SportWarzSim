@@ -159,7 +159,7 @@ mod pyrust {
                 not_nearest_multiplier: 2.0,
                 non_same_state_multiplier: 2.0,
                 distance_decay_numerator: 0.0025,
-                competition_temperature_base: 1.25,
+                competition_temperature_base: 1.00,
                 all_data,
                 us_median_income,
                 geos_us,
@@ -233,11 +233,13 @@ mod pyrust {
                 }
                 let team_distance_decay: f64 = league_distance_decay * (5.0/team.value_n);
 
-                let d_exp = f64::exp(-team_distance_decay * f64::min(effective_distance, 15000.0/team.value_n));
+                let d_exp = f64::exp(-team_distance_decay * effective_distance);
+                
                 let ds_exp = f64::exp(-team_distance_decay * effective_distance * 2.0);
 
                 value_r[i] = ((league.weight * 10.0) + team.value_l * d_exp)  + ((league.weight * 10.0) + team.value_s * ds_exp);
-                value_multipliers[i] = f64::exp(-f64::min(effective_distance, 500.0) / 100.0) * league.weight;
+                
+                value_multipliers[i] = f64::exp(-f64::min(effective_distance, 200.0) / 50.0) * league.weight;
             }
             let exp_r = (value_r / self.competition_temperature_base).mapv(f64::exp);
 

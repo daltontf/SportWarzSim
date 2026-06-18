@@ -196,7 +196,11 @@ class Interactive:
                     </table>'''))  
             
                 leaflet_map.add(current_popup)
-            return show_teams      
+            return show_teams   
+
+        def save_prior_results(event):
+            nonlocal prior_league_calculations, result
+            prior_league_calculations = result["county_stats_by_geoid"]
 
         def recalculate_stats(event):
             nonlocal geojson_layer
@@ -377,6 +381,7 @@ class Interactive:
         prior_league_calculations = result["county_stats_by_geoid"]
 
         calc_button=widgets.Button(description='Re-Calculate')
+        save_prior=widgets.Button(description='Save Prior Results')
 
 
         for team in self.league["teams"]:
@@ -395,12 +400,14 @@ class Interactive:
         map.on_interaction(handle_interaction)
 
         calc_button.on_click(recalculate_stats)
+        save_prior.on_click(save_prior_results)
 
         box = widgets.VBox([
-            calc_button
+            calc_button,
+            save_prior
         ])
         
-        control = WidgetControl(widget=box, position='topright')
+        control = WidgetControl(widget=box, position='bottomleft')
         map.add(control)
 
         return map

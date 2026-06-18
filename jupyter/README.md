@@ -39,10 +39,7 @@ docker run -p 8866:8866 daltontf1212/sportwarzsim:latest
 
 Navigate to http://localhost:8866/
 
-
 It is currently deployed on an EC2 [instance](http://54.236.126.57:8866/). There was problems scaling the calculations so that work is done via an AWS Lambda. Heat map calculations will take about 20 seconds which is likely slower that running locally (unless one has some old hardware).
-
-
 
 #### Notebooks
 
@@ -105,6 +102,13 @@ The code does none of the "L", "S" or "N" accumulation over time. The current va
     - Larger markets teams with big name rosters will have higher value here. 
 
     - Iconic teams retain reputation even outside peak eras (e.g., Dallas Cowboys)
+
+#### 
+There are two output values for a team in a given US county, "Population Share" and "Population Share Value". Initially an AI chat suggested a methodology with no one is "not a fan" and the the sum of the population share is the population. It is more like if they were a fan, who'd they be a fan of. The "share value" is more relevant since it represents the financial benefit to the team. Share value is derived for the population share where being closer to the team and the median income of the county affecting it. People living closer to a team are more likely to follow the team, attend games, buy merchandise, etc.
+
+The share value does not tranlate into some kind of dollar amount but relative values can tell us something like whether a team relocating is a positive for the league or an owner. A team's share value goes up in another market indicates that it would be lucrative to move if fan support ("L", "S" and "S") stays the same. Likewise, if the sum of the whole leagues share values increases, then the league itself would benefit.
+
+An individual fan usually benefits multiple teams via buying TV packages, travelling to away games or even buying merchandise of another team.
 
 #### "Fun" aspects I'd like to be able to do
 
