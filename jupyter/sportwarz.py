@@ -69,9 +69,9 @@ class LeaguesModel:
     _geojson_layer: GeoJSON = None
     _leaflet_map: Map = None
 
-    league_stats_calculator: pyrust.LeagueStatsCalculator
+    league_stats_calculator: pyrust.PyoLeagueStatsCalculator
 
-    def __init__(self, leagues_stats_calculator: pyrust.LeagueStatsCalculator = pyrust.LeagueStatsCalculator()):
+    def __init__(self, leagues_stats_calculator: pyrust.PyoLeagueStatsCalculator = pyrust.PyoLeagueStatsCalculator()):
         self._leagues = {}
         self._leagues_calculations = {}
         self.league_stats_calculator = leagues_stats_calculator
@@ -285,9 +285,9 @@ class LeaguesModel:
 class Simulation:
     current_model: LeaguesModel
     prior_model: LeaguesModel
-    league_stats_calculator: pyrust.LeagueStatsCalculator
+    league_stats_calculator: pyrust.PyoLeagueStatsCalculator
 
-    def __init__(self, leagues_stats_calculator: pyrust.LeagueStatsCalculator = pyrust.LeagueStatsCalculator()):
+    def __init__(self, leagues_stats_calculator: pyrust.PyoLeagueStatsCalculator = pyrust.PyoLeagueStatsCalculator()):
         self.current_model = LeaguesModel(leagues_stats_calculator)
         self.league_stats_calculator = leagues_stats_calculator
 
@@ -313,7 +313,7 @@ class Simulation:
     def add_teams(self, league_name: str, new_teams: list[Team], same_map = False):
         self.apply_changes(league_name, lambda model: model.add_teams(league_name, new_teams), same_map)
 
-    def with_league_stats_calculator(self, league_name: str, mutator: Callable[pyrust.LeagueStatsCalculator, None]):
+    def with_league_stats_calculator(self, league_name: str, mutator: Callable[pyrust.PyoLeagueStatsCalculator, None]):
         self.prior_model = self.current_model
         self.current_model = self.prior_model.copy_with_just_league(league_name)
         mutator(self.current_model.league_stats_calculator)

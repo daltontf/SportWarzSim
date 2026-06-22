@@ -16,7 +16,7 @@ class Interactive:
     counties_geojson: None
     league: None
     leagues_data: None
-    calculator: pyrust.LeagueStatsCalculator
+    calculator: pyrust.PyoLeagueStatsCalculator
 
 
     def __init__(self, league_name: str):
@@ -37,7 +37,7 @@ class Interactive:
 
         }
 
-        self.calculator = pyrust.LeagueStatsCalculator() 
+        self.calculator = pyrust.PyoLeagueStatsCalculator() 
 
 
     def opacity_for_population(self, share_population_value): 
