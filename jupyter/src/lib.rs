@@ -15,7 +15,7 @@ mod pyrust {
     impl PyoLeagueStatsCalculator {
         #[new]
         fn new() -> Self {
-            let league_stats_calculator = LeagueStatsCalculator::new();
+            let league_stats_calculator = LeagueStatsCalculator::new_default();
 
             Self {
                 // outside_lower48_multiplier: 2.0,

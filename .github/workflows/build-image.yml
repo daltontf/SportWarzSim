@@ -20,7 +20,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -f jupyter/docker/Dockerfile -t sportwarzsim:latest jupyter
+          docker build -f jupyter/docker/Dockerfile -t sportwarzsim:latest .
 
       - name: Save Docker image as tar
         run: |

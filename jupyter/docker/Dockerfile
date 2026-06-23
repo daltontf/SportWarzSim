@@ -20,10 +20,13 @@ WORKDIR /build
 RUN pip3 install maturin
 RUN pip3 install patchelf
 
-COPY ./src/ ./src/
-COPY ./*.toml .
+COPY ./rust_calc/src/ ./rust_calc/src/
+COPY ./rust_calc/*.toml ./rust_calc/
+COPY ./jupyter/src/ ./jupyter/src/
+COPY ./jupyter/*.toml ./jupyter/
 
 # Install the current package in editable mode and build the Rust extension in release mode
+WORKDIR /build/jupyter 
 RUN pip install -e . 
 RUN maturin build --release
 
@@ -32,7 +35,7 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # Copy only the built wheel
-COPY --from=builder /build/target/wheels/*.whl /tmp/
+COPY --from=builder /build/jupyter/target/wheels/*.whl /tmp/
 
 # Install wheel
 RUN pip install /tmp/pyrust-0.1.0-cp312-cp312-manylinux_2_39_x86_64.whl
@@ -47,12 +50,12 @@ RUN pip3 install voila
 RUN pip3 install polars
 
 # Copy the current directory contents into the container at /app
-COPY ./*.csv /app
-COPY ./*.geojson /app
-COPY ./*.ipynb /app
-COPY ./*.json /app
-COPY ./*.py /app
-COPY ./*.png /app
+COPY ./jupyter/*.csv /app
+COPY ./jupyter/*.geojson /app
+COPY ./jupyter/*.ipynb /app
+COPY ./jupyter/*.json /app
+COPY ./jupyter/*.py /app
+COPY ./jupyter/*.png /app
 
 # Make port 8888 available to the world outside this container
 EXPOSE 8866
