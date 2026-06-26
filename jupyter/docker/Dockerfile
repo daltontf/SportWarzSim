@@ -22,6 +22,8 @@ RUN pip3 install patchelf
 
 COPY ./rust_calc/src/ ./rust_calc/src/
 COPY ./rust_calc/*.toml ./rust_calc/
+COPY ./rust_calc/*.geojson ./rust_calc/
+COPY ./rust_calc/*.csv ./rust_calc/
 COPY ./jupyter/src/ ./jupyter/src/
 COPY ./jupyter/*.toml ./jupyter/
 
