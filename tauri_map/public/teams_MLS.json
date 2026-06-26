@@ -1,0 +1,396 @@
+{
+  "league_name": "MLS",
+  "weight": 0.2, 
+  "teams": [
+    {
+      "name": "Atlanta United FC",
+      "venue": "Mercedes-Benz Stadium",
+      "L": 4.5,
+      "S": -0.5,
+      "N": 5.0,
+      "coordinates": {
+        "lat": 33.75549,
+        "lon": -84.40199
+      },
+      "color": "#9D2235",
+      "state": "Georgia"
+    },
+    {
+      "name": "Austin FC",
+      "venue": "Q2 Stadium",
+      "L": 2.5,
+      "S": 2.0,
+      "N": 5.0,
+      "coordinates": {
+        "lat": 30.2000,
+        "lon": -97.7181
+      },
+      "color": "#00B140",
+      "state": "Texas"
+    },
+    {
+      "name": "CF Montréal",
+      "venue": "Saputo Stadium",
+      "L": 4.0,
+      "S": -1.0,
+      "N": 4.0,
+      "coordinates": {
+        "lat": 45.5417,
+        "lon": -73.5775
+      },
+      "color": "#00215B",
+      "state": "Quebec","eh":"Y"
+    },
+    {
+      "name": "Charlotte FC",
+      "venue": "Bank of America Stadium",
+      "L": 2.5,
+      "S": 1.5,
+      "N": 5.0,
+      "coordinates": {
+        "lat": 35.22585,
+        "lon": -80.85361
+      },
+      "color": "#0085CA",
+      "state": "North Carolina"
+    },
+    {
+      "name": "Chicago Fire FC",
+      "venue": "Soldier Field",
+      "L": 4.0,
+      "S": 0.0,
+      "N": 5.0,
+      "coordinates": {
+        "lat": 41.86237,
+        "lon": -87.61726
+      },
+      "color": "#141B4D",
+      "state": "Illinois"
+    },
+    {
+      "name": "FC Cincinnati",
+      "venue": "TQL Stadium",
+      "L": 3.0,
+      "S": 1.5,
+      "N": 6.0,
+      "coordinates": {
+        "lat": 39.1031,
+        "lon": -84.5120
+      },
+      "color": "#FE5000",
+      "state": "Ohio"
+    },
+    {
+      "name": "Colorado Rapids",
+      "venue": "Dick’s Sporting Goods Park",
+      "L": 4.0,
+      "S": 1.0,
+      "N": 5.0,
+      "coordinates": {
+        "lat": 39.8061,
+        "lon": -104.8938
+      },
+      "color": "#960A2C",
+      "state": "Colorado"
+    },
+    {
+      "name": "Columbus Crew SC",
+      "venue": "Lower.com Field",
+      "L": 3.5,
+      "S": 1.0,
+      "N": 5.5,
+      "coordinates": {
+        "lat": 39.9678,
+        "lon": -83.0077
+      },
+      "color": "#FEDD00",
+      "state": "Ohio"
+    },
+    {
+      "name": "D.C. United",
+      "venue": "Audi Field",
+      "L": 4.0,
+      "S": 1.5,
+      "N": 5.5,
+      "coordinates": {
+        "lat": 38.8883,
+        "lon": -77.0208
+      },
+      "color": "#CE1432",
+      "state": "District of Columbia"
+    },
+    {
+      "name": "Inter Miami CF",
+      "venue": "Chase Stadium",
+      "L": 2.0,
+      "S": 4.0,
+      "N": 9.0,
+      "coordinates": {
+        "lat": 26.1475,
+        "lon": -80.2723
+      },
+      "color": "#E22E50",
+      "state": "Florida"
+    },
+    {
+      "name": "FC Dallas",
+      "venue": "Toyota Stadium",
+      "L": 3.0,
+      "S": 1.0,
+      "N": 5.0,
+      "coordinates": {
+        "lat": 33.154320,
+        "lon": -96.835426
+      },
+      "color": "#C8102E",
+      "state": "Texas"
+    },
+    {
+      "name": "Houston Dynamo",
+      "venue": "Shell Energy Stadium",
+      "L": 3.5,
+      "S": 0.0,
+      "N": 5.0,
+      "coordinates": {
+        "lat": 29.7517,
+        "lon": -95.3626
+      },
+      "color": "#FF8200",
+      "state": "Texas"
+    },
+    {
+      "name": "LA Galaxy",
+      "venue": "Dignity Health Sports Park",
+      "L": 4.0,
+      "S": -1.0,
+      "N": 8.0,
+      "coordinates": {
+        "lat": 33.8642,
+        "lon": -118.2610
+      },
+      "color": "#003F87",
+      "state": "California"
+    },
+    {
+      "name": "Los Angeles FC",
+      "venue": "BMO Stadium",
+      "L": 3.0,
+      "S": 2.0,
+      "N": 8.5,
+      "coordinates": {
+        "lat": 34.012772,
+        "lon": -118.284627
+      },
+      "color": "#101820",
+      "state": "California"
+    },
+    {
+      "name": "Minnesota United FC",
+      "venue": "Allianz Field",
+      "L": 3.5,
+      "S": 1.0,
+      "N": 5.0,
+      "coordinates": {
+        "lat": 44.9486,
+        "lon": -93.0934
+      },
+      "color": "#A2AAAD",
+      "state": "Minnesota"
+    },
+    {
+      "name": "Nashville SC",
+      "venue": "Geodis Park",
+      "L": 3.0,
+      "S": 1.0,
+      "N": 5.0,
+      "coordinates": {
+        "lat": 36.1659,
+        "lon": -86.7850
+      },
+      "color": "#E0B03C",
+      "state": "Tennessee"
+    },
+    {
+      "name": "New England Revolution",
+      "venue": "Gillette Stadium",
+      "L": 4.0,
+      "S": -1.0,
+      "N": 4.0,
+      "coordinates": {
+        "lat": 42.09094,
+        "lon": -71.26434
+      },
+      "color": "#C8102E",
+      "state": "Massachusetts"
+    },
+    {
+      "name": "New York City FC",
+      "venue": "Yankee Stadium",
+      "L": 3.0,
+      "S": 1.0,
+      "N": 6.0,
+      "coordinates": {
+        "lat": 40.82917,
+        "lon": -73.92639
+      },
+      "color": "#73C2FB",
+      "state": "New York"
+    },
+    {
+      "name": "New York Red Bulls",
+      "venue": "Red Bull Arena",
+      "L": 4.0,
+      "S": 0.0,
+      "N": 6.0,
+      "coordinates": {
+        "lat": 40.8120,
+        "lon": -74.0744
+      },
+      "color": "#ED1C24",
+      "state": "New York"
+    },
+    {
+      "name": "Orlando City SC",
+      "venue": "Inter&Co Stadium",
+      "L": 3.0,
+      "S": 1.0,
+      "N": 5.0,
+      "coordinates": {
+        "lat": 28.5392,
+        "lon": -81.3839
+      },
+      "color": "#7030A0",
+      "state": "Florida"
+    },
+    {
+      "name": "Philadelphia Union",
+      "venue": "Subaru Park",
+      "L": 2.0,
+      "S": 2.0,
+      "N": 5.0,
+      "coordinates": {
+        "lat": 39.9175,
+        "lon": -75.3550
+      },
+      "color": "#002B5B",
+      "state": "Pennsylvania"
+    },
+    {
+      "name": "Portland Timbers",
+      "venue": "Providence Park",
+      "L": 3.5,
+      "S": 0.0,
+      "N": 5.0,
+      "coordinates": {
+        "lat": 45.5200,
+        "lon": -122.6886
+      },
+      "color": "#004812",
+      "state": "Oregon"
+    },
+    {
+      "name": "Real Salt Lake",
+      "venue": "America First Field",
+      "L": 2.5,
+      "S": 0.5,
+      "N": 5.0,
+      "coordinates": {
+        "lat": 40.5829,
+        "lon": -111.8934
+      },
+      "color": "#8A1538",
+      "state": "Utah"
+    },
+    {
+      "name": "San Diego FC",
+      "venue": "Snapdragon Stadium",
+      "L": 1.5,
+      "S": 3.0,
+      "N": 5.0,
+      "coordinates": {
+        "lat": 32.784444,
+        "lon": -117.122833
+      },
+      "color": "#006CA6",
+      "state": "California"
+    },
+    {
+      "name": "San Jose Earthquakes",
+      "venue": "PayPal Park",
+      "L": 4.0,
+      "S": 0.0,
+      "N": 5.0,
+      "coordinates": {
+        "lat": 37.35139,
+        "lon": -121.92500
+      },
+      "color": "#003087",
+      "state": "California"
+    },
+    {
+      "name": "Sporting Kansas City",
+      "venue": "Children’s Mercy Park",
+      "L": 4.0,
+      "S": -0.5,
+      "N": 6.0,
+      "coordinates": {
+        "lat": 39.1219,
+        "lon": -94.8233
+      },
+      "color": "#003DA5",
+      "state":["Missouri","Kansas"]
+    },
+    {
+      "name": "St. Louis City SC",
+      "venue": "Energizer Park",
+      "L": 1.5,
+      "S": 4.0,
+      "N": 5.0,
+      "coordinates": {
+        "lat": 38.631340,
+        "lon": -90.210594
+      },
+      "color": "#E31837",
+      "state": "Missouri"
+    },
+    {
+      "name": "Toronto FC",
+      "venue": "BMO Field",
+      "L": 3.0,
+      "S": 0.5,
+      "N": 4.0,
+      "coordinates": {
+        "lat": 43.6426,
+        "lon": -79.3895
+      },
+      "color": "#D21F27",
+      "state": "Ontario","eh":"Y"
+    },
+    {
+      "name": "Vancouver Whitecaps FC",
+      "venue": "BC Place",
+      "L": 2.5,
+      "S": 1.0,
+      "N": 4.0,
+      "coordinates": {
+        "lat": 49.2779,
+        "lon": -123.1159
+      },
+      "color": "#006AB3",
+      "state": "British Columbia","eh":"Y"
+    },
+    {
+      "name": "Seattle Sounders FC",
+      "stadium": "Lumen Field",
+      "L": 3.5,
+      "S": 1.0,
+      "N": 7.0,
+      "coordinates": {
+        "lat": 47.5952,
+        "lon": -122.3316
+      },
+      "color": "#236192",
+      "state": "Washington"
+    }
+  ]
+}
