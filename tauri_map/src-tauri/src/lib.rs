@@ -17,16 +17,21 @@ pub fn run() {
             }
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![load_league])
+        .invoke_handler(tauri::generate_handler![load_league, lookup_state_name_by_coordinates])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
 
 #[tauri::command] 
-fn load_league(state: State<'_, Mutex<LeagueStatsCalculator>>, league_data: &str) -> LeagueStats {
-    let league: League = serde_json::from_str(league_data).unwrap();
+fn load_league(state: State<'_, Mutex<LeagueStatsCalculator>>, league: League) -> LeagueStats {
+    //let league: League = serde_json::from_str(league_data).unwrap();
 
     let calculator = state.lock().unwrap();
 
-    calculator.load_league(league)
+    calculator.load_league(&league)
+}
+
+#[tauri::command]
+fn lookup_state_name_by_coordinates(state: State<'_, Mutex<LeagueStatsCalculator>>, lat: f64, lon: f64) -> Option<String> {
+    state.lock().unwrap().lookup_state_name_by_coordinates(lat, lon)
 }

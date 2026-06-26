@@ -75,7 +75,7 @@ class LeaguesModel:
         self._leagues = {}
         self._leagues_calculations = {}
         self.league_stats_calculator = leagues_stats_calculator
-        with open("./counties-4326.geojson") as f:
+        with open("./counties_4326.geojson") as f:
             self._counties_geojson =  json.load(f) 
 
     def load_leagues(self, leagues):

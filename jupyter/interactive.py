@@ -30,7 +30,7 @@ class Interactive:
         with open(f'teams_{league_name}.json', "r") as f:
             self.league = json.load(f)
 
-        with open("./counties-4326.geojson") as f:
+        with open("./counties_4326.geojson") as f:
             self.counties_geojson =  json.load(f)   
 
         self.leagues_data = { 

@@ -30,7 +30,7 @@ mod pyrust {
         fn load_league(&self, py: Python<'_>, league_data: &Bound<'_, PyAny>) -> Py<PyAny> {
             let league: League = depythonize(league_data).unwrap();
 
-            let league_stats = self.league_stats_calculator.load_league(league);
+            let league_stats = self.league_stats_calculator.load_league(&league);
 
             pythonize(py, &league_stats).unwrap().into()
         }

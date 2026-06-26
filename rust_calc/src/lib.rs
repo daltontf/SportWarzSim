@@ -10,9 +10,6 @@ use ndarray::Array1;
 use ndarray_stats::QuantileExt;
 use proj::Proj;
 use rayon::prelude::*;
-use std::fs;
-use std::fs::File;
-use std::io::BufReader;
 use std::time::Instant;
 use wkt::TryFromWkt;
 
@@ -126,33 +123,35 @@ pub struct LeagueStatsCalculator {
     pub state_geometries: Vec<State4326>,
 }
 
+const COUNTIES_ALL_CSV_DEFAULT: &str = include_str!("../counties_all.csv");
+const US_GEOMETRY_GEOJSON_DEFAULT: &str = include_str!("../us_geometry.geojson");
+const STATES_4326_GEOJSON_DEFAULT: &str = include_str!("../states_4326.geojson");
+
 impl LeagueStatsCalculator {
     pub fn new_default() -> Self {
         Self::new(
-            "counties_all.csv".to_string(),
-            "us_geometry.geojson".to_string(),
-            "states-4326.geojson".to_string()
+            COUNTIES_ALL_CSV_DEFAULT,
+            US_GEOMETRY_GEOJSON_DEFAULT,
+            STATES_4326_GEOJSON_DEFAULT
         )
     }
 
     pub fn new(
-        counties_all_csv_file: String,
-        us_geometry_geojson_file: String,
-        states_4326_geojson_file: String
+        counties_all_csv_str: &str,
+        us_geometry_geojson_str: &str,
+        states_4326_geojson_str: &str
     ) -> Self {
-        let all_data: Vec<CountyAll> = csv::Reader::from_reader(File::open(counties_all_csv_file).unwrap())
+        let all_data: Vec<CountyAll> = csv::Reader::from_reader(counties_all_csv_str.as_bytes())
             .deserialize().collect::<Result<_, _>>().unwrap();
 
         let us_median_income =
             all_data.iter().map(|c| c.median_income).sum::<u32>() as f64 / all_data.len() as f64;
 
-        let us_geometry_text = fs::read_to_string(us_geometry_geojson_file).unwrap();
-        let us_geometry_geojson: GeoJson = us_geometry_text.parse().unwrap();
+        let us_geometry_geojson: GeoJson = us_geometry_geojson_str.parse().unwrap();
         let us_geometry: Geometry = us_geometry_geojson.try_into().unwrap();
         let geos_us: geos::Geometry = (&us_geometry).try_into().unwrap();
 
-        let states_reader = BufReader::new(File::open(states_4326_geojson_file).unwrap());
-        let features: geojson::FeatureCollection = serde_json::from_reader(states_reader).unwrap();
+        let features: geojson::FeatureCollection = serde_json::from_str(states_4326_geojson_str).unwrap();
         let state_geometries: Vec<State4326> = features
             .features
             .into_iter()
@@ -184,7 +183,7 @@ impl LeagueStatsCalculator {
         }
     }
 
-    pub fn load_league(&self, league: League) -> LeagueStats {
+    pub fn load_league(&self, league: &League) -> LeagueStats {
         let start = Instant::now();
 
         let transform = Proj::new_known_crs(EPSG_4326, EPSG_5070, None).unwrap();
@@ -262,14 +261,17 @@ impl LeagueStatsCalculator {
 
             let mut team_map: HashMap<String, TeamStats> = HashMap::new();
 
+            // if the county has higher income than median, it is more valuable to the team, as they can spend more on tickets,
+            // merchandise, etc. However, this effect has diminishing returns, as a county with 200k income is not twice as valuable
+            // as a county with 100k income. The 0.75 in the denominator controls how quickly the returns diminish.
+            let income_relative = county.median_income as f64 / self.us_median_income;
+            let income_multiple = income_relative / (income_relative + 0.75);
+            let county_value = county.population as f64 * income_multiple;
+
             for (i, team) in league.teams.iter().enumerate() {
                 let share_population = county.population as f64 * shares[i];
-                let income_relative = county.median_income as f64 / self.us_median_income;
-                // if the county has higher income than median, it is more valuable to the team, as they can spend more on tickets,
-                // merchandise, etc. However, this effect has diminishing returns, as a county with 200k income is not twice as valuable
-                // as a county with 100k income. The 0.75 in the denominator controls how quickly the returns diminish.
-                let income_multiple = income_relative / (income_relative + 0.75);
-                let share_population_value = share_population * income_multiple * value_multipliers[i];
+               
+                let share_population_value = county_value * shares[i] * value_multipliers[i];
 
                 let team_stats = TeamStats {
                     team_name: team.name.clone(),
@@ -310,7 +312,7 @@ impl LeagueStatsCalculator {
         println!("Elapsed: {:?}", elapsed);
 
         LeagueStats {
-            league_name: league.league_name,
+            league_name: league.league_name.clone(),
             county_stats_by_geoid: all_county_map,
         }
     }
@@ -342,7 +344,31 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+       let league = League {
+                league_name: "MLB".to_string(),
+                weight: 0.7,
+                teams: vec![
+                    Team {
+                        name: "Arizona Diamondbacks".to_string(),
+                        value_l: 6.0,
+                        value_s: 0.0,
+                        value_n: 5.0,
+                        coordinates: LatLonCoords {
+                            lat: 33.445564,
+                            lon: -112.067413
+                        },
+                        color: Some("#A71930".to_string()),
+                        state: StateOrStates::State("Arizona".to_string()),
+                    }
+                ]
+            };
+
+        let calculator = LeagueStatsCalculator::new_default();
+
+        let results = calculator.load_league(&league);
+
+        assert_eq!(results.county_stats_by_geoid.len(), 3108);  
+        assert_eq!(results.league_name, "MLB") 
+        
     }
 }

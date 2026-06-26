@@ -3,40 +3,36 @@ import { MapContainer, TileLayer } from 'react-leaflet';
 import { Tabs, Tab, TabList, TabPanel} from "react-tabs"
 
 import MapController from './MapController';
+import { type LeagueStats, type League, type Team } from './Structs';
 
 import "leaflet/dist/leaflet.css";
 import "react-tabs/style/react-tabs.css"
-
-export interface CalculatorInteface {
-  getCalculationsForLeague: (league:any) => Promise<any>,
-  getStateForCoordinates: (lat:number, lon:number) => Promise<string>
-}
+import CalculationsComparision from './CalculationsComparision';
 
 export default function App({calculator}: any) {
-  const [geojson, setGeoJsonData] = useState<any>(null);
-  const [calculations, setCalculations] = useState<any>(null);
-  const [league, setLeague] = useState<any>(null);
-  const [teamFile, setTeamFile] = useState("teams_MLB.json");
-
-
-  async function fetchGeoJson() {
-    return await fetch("/counties-4326.geojson")
-        .then((res) => res.text())
-        .then((text) => JSON.parse(text));
-  }
-
-  async function calculate() { 
-    setCalculations(await fetch(teamFile)
-       .then((res) => res.text())
-       .then((text) => {
-          setLeague(JSON.parse(text)["teams"]);
-          return calculator.getCalculationsForLeague(text)
-       }))
-  }
+  const [teamFile, setTeamFile] = useState("");
+  const [calculations, setCalculations] = useState<LeagueStats | null>(null);
+  const [priorCalculations, setPriorCalculations] = useState<LeagueStats | null>(null);
+  const [league, setLeague] = useState<League | null>(null);
 
   useEffect(() => {
-    fetchGeoJson().then(setGeoJsonData);
-  }, []); 
+    if (!teamFile) return;
+     fetch(teamFile)
+      .then((res) => res.text())
+      .then((text) => setLeague(JSON.parse(text)))
+  }, [teamFile])
+
+  const calculateRef = useRef<HTMLButtonElement>(null);  
+
+  async function calculate() {
+    calculateRef.current.disabled = true;
+    setCalculations(await calculator.getCalculationsForLeague(league))
+    calculateRef.current.disabled = false;
+  }   
+
+  function updateTeams(teams: Team[]) {
+    setLeague((prevLeague) => ({ ...prevLeague, teams }));
+  }  
 
   return (
     <Tabs>
@@ -55,7 +51,7 @@ export default function App({calculator}: any) {
           attribution="&copy; OpenStreetMap contributors &copy; CARTO"
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
-        <MapController geojson={geojson} calculations={calculations} teams={league}/>
+        <MapController calculator={calculator} calculations={calculations} league={league} updateTeams={updateTeams} />
       </MapContainer>
       <div style={{ 
           display: "flex", 
@@ -66,13 +62,19 @@ export default function App({calculator}: any) {
         }}>
         <label>League:</label>  
         <select value={teamFile} onChange={(e) => setTeamFile(e.target.value)}>
+          <option value="" disabled>-</option>
           <option value="teams_MLB.json">MLB</option>
+          <option value="teams_MLS.json">MLS</option>
+          <option value="teams_NBA.json">NBA</option>
+          <option value="teams_NFL.json">NFL</option>
+          <option value="teams_NHL.json">NHL</option>
         </select>
-        <button onClick={calculate}>Calculate</button>        
+        <button ref={calculateRef} onClick={calculate}>Calculate</button>        
       </div>
     </div>
     </TabPanel>
     <TabPanel>
+      <CalculationsComparision calculations={calculations} priorCalculations={priorCalculations}/>
     </TabPanel>
     </Tabs> 
   );
