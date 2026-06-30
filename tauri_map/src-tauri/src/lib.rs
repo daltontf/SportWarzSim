@@ -24,11 +24,7 @@ pub fn run() {
 
 #[tauri::command] 
 fn load_league(state: State<'_, Mutex<LeagueStatsCalculator>>, league: League) -> LeagueStats {
-    //let league: League = serde_json::from_str(league_data).unwrap();
-
-    let calculator = state.lock().unwrap();
-
-    calculator.load_league(&league)
+    state.lock().unwrap().load_league(&league)
 }
 
 #[tauri::command]

@@ -2,11 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
-html,body,#root { height:100%; margin:0; }
+html,body,#root { 
+    height:100%;
+    margin:0;
+    background-color: #111111;
+    color:#DDDDDD;  
+}
 
 .leaflet-popup-content {
-    background-color: white;
-    color: black;
     max-height: 250px;
     min-width: 350px;
     overflow-y: auto; 

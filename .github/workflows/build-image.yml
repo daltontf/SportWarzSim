@@ -20,18 +20,18 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -f jupyter/docker/Dockerfile -t sportwarzsim:latest .
+          docker build -f jupyter/docker/Dockerfile -t fandommm_voila:latest .
 
       - name: Save Docker image as tar
         run: |
           mkdir -p artifacts
-          docker save sportwarzsim:latest -o artifacts/sportwarzsim.tar
+          docker save fandommm_voila:latest -o artifacts/fandommm_voila.tar
 
       - name: Upload tar artifact
         uses: actions/upload-artifact@v4
         with:
-          name: docker-sportwarzsim-tar
-          path: artifacts/sportwarzsim.tar
+          name: docker-fandommm_voila-tar
+          path: artifacts/fandommm_voila.tar
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
@@ -41,5 +41,5 @@ jobs:
 
       - name: Tag and push image
         run: |
-          docker tag sportwarzsim:latest daltontf1212/sportwarzsim:latest
-          docker push daltontf1212/sportwarzsim:latest    
+          docker tag fandommm_voila:latest daltontf1212/fandommm_voila:latest
+          docker push daltontf1212/fandommm_voila:latest    

@@ -17,7 +17,7 @@ function opacityForPopulation(share_population_value: number) {
   return 0.1;
 }
 
-function styleMap(calculations: any) {
+function styleMap(calculations: LeagueStats) {
   return (feature: any) => {
     const county = calculations.county_stats_by_geoid[feature.properties.geoid];
     return {
@@ -33,7 +33,7 @@ function styleMap(calculations: any) {
 
 interface MapControllerProps {
   calculator: CalculatorInteface;
-  calculations?: LeagueStats;
+  calculations: [LeagueStats | null, LeagueStats] | null;
   league?: League;
   updateTeams: (teams: Team[]) => void;
 }
@@ -103,12 +103,12 @@ export default function MapController({
     if (!geojson || !calculations) return;
 
     const geoJsonLayer = L.geoJSON(geojson, {
-      style: styleMap(calculations),
+      style: styleMap(calculations[1]),
       onEachFeature: (feature, layer) => {
         (layer.bindPopup(() => {
           var leagues_rows = "";
           var county =
-            calculations.county_stats_by_geoid[feature.properties.geoid];
+            calculations[1].county_stats_by_geoid[feature.properties.geoid];
           if (county?.team_stats) {
             for (const team_stat of county.team_stats) {
               if (team_stat.share > 1 / county.team_stats.length) {

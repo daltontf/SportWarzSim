@@ -368,7 +368,6 @@ mod tests {
         let results = calculator.load_league(&league);
 
         assert_eq!(results.county_stats_by_geoid.len(), 3108);  
-        assert_eq!(results.league_name, "MLB") 
-        
+        assert_eq!(results.league_name, "MLB");        
     }
 }

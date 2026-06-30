@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "tauri-map",
+  "productName": "FandomMM Interactive",
   "version": "0.1.0",
   "identifier": "com.tauri.dev",
   "build": {
@@ -12,9 +12,9 @@
   "app": {
     "windows": [
       {
-        "title": "tauri-map",
-        "width": 800,
-        "height": 600,
+        "title": "FandomMM Interactive",
+        "width": 1600,
+        "height": 800,
         "resizable": true,
         "fullscreen": false
       }

@@ -1,3 +1,7 @@
+## fandomMM/jupyter
+
+This is the Jupyter notebook project for the fandomMM application. This is the original project named "Sportwarzsim".
+
 This project applies a mathematical model to U.S. counties to estimate the level of fan support for professional sports teams. It is inspired by several Tableau maps that visualize Twitter followers by county:
 
 - https://public.tableau.com/app/profile/matt.sorenson/viz/NFLFollowerMap/NFLMap
@@ -31,10 +35,10 @@ The term “Warz” comes from a related idea: a strategy simulation game in whi
 - You can also run it via Docker:
 
 ```
-docker pull daltontf1212/sportwarzsim:latest
+docker pull daltontf1212/fandommm_voila:latest
 ```
 ```
-docker run -p 8866:8866 daltontf1212/sportwarzsim:latest
+docker run -p 8866:8866 daltontf1212/fandommm_voila:latest
 ```
 
 Navigate to http://localhost:8866/
@@ -43,7 +47,7 @@ It is currently deployed on an EC2 [instance](http://54.236.126.57:8866/). There
 
 #### Notebooks
 
-There are notebooks simulating various scenarios included at the root path. It quickly got unwieldy with led to the creation which provides a more interactive experience. [Link to documentation](./Interactive.md)
+There are notebooks simulating various scenarios included at the root path. It quickly got unwieldy with led to the creation which provides a more interactive experience. [Link to documentation](./Interactive.md). 
 
 #### Things taken into account:
 
@@ -142,4 +146,4 @@ This has been taken care thought it needed more horsepower than Python can provi
 
 - A farther market may be easier to travel to. Springfield Missouri is closer to Kansas City than St. Louis, but has more Cardinals fans. Recently the Cardinals put a AA affiliate there but I-44 is a factor. This is a bit mitigated by the having the AA team in the data.
 
-- Since the NFL's Giants and Jets play in the same venue, it will be a challenge to program in the geographic tendencies on those two teams. This could be mitigated be having a "virtual" teams in various boroughs. The Jets used to play at Shea Stadium so a "virtual team" is there.  
+- Since the NFL's Giants and Jets play in the same venue, it will be a challenge to program in the geographic tendencies on those two teams. This could be mitigated be having a "virtual" teams in various boroughs. The Jets used to play at Shea Stadium so a "virtual team" could be there.  

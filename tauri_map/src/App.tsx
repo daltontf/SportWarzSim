@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
-import { Tabs, Tab, TabList, TabPanel} from "react-tabs"
+import { Tabs, Tab, TabList, TabPanel } from "react-tabs"
+import { nanoid } from 'nanoid';
 
 import MapController from './MapController';
 import { type LeagueStats, type League, type Team } from './Structs';
@@ -11,22 +12,27 @@ import CalculationsComparision from './CalculationsComparision';
 
 export default function App({calculator}: any) {
   const [teamFile, setTeamFile] = useState("");
-  const [calculations, setCalculations] = useState<LeagueStats | null>(null);
-  const [priorCalculations, setPriorCalculations] = useState<LeagueStats | null>(null);
+  const [calculations, setCalculations] = useState<[LeagueStats | null, LeagueStats] | null>(null);
   const [league, setLeague] = useState<League | null>(null);
 
   useEffect(() => {
     if (!teamFile) return;
      fetch(teamFile)
       .then((res) => res.text())
-      .then((text) => setLeague(JSON.parse(text)))
+       .then((text) => {
+         const league = JSON.parse(text);
+         for (const team of league.teams) {
+           team.key = nanoid();
+         }
+         setLeague(league);
+       })
   }, [teamFile])
 
   const calculateRef = useRef<HTMLButtonElement>(null);  
 
   async function calculate() {
     calculateRef.current.disabled = true;
-    setCalculations(await calculator.getCalculationsForLeague(league))
+    setCalculations([calculations ? calculations[1] : null, await calculator.getCalculationsForLeague(league)])
     calculateRef.current.disabled = false;
   }   
 
@@ -61,7 +67,10 @@ export default function App({calculator}: any) {
           zIndex: 1000
         }}>
         <label>League:</label>  
-        <select value={teamFile} onChange={(e) => setTeamFile(e.target.value)}>
+            <select value={teamFile} onChange={(e) => {
+              setTeamFile(e.target.value);
+              setCalculations(null);
+            }}>
           <option value="" disabled>-</option>
           <option value="teams_MLB.json">MLB</option>
           <option value="teams_MLS.json">MLS</option>
@@ -74,7 +83,7 @@ export default function App({calculator}: any) {
     </div>
     </TabPanel>
     <TabPanel>
-      <CalculationsComparision calculations={calculations} priorCalculations={priorCalculations}/>
+      <CalculationsComparision calculations={calculations}/>
     </TabPanel>
     </Tabs> 
   );
