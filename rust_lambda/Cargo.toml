@@ -1,0 +1,12 @@
+[package]
+name = "rust_lambda"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+lambda_http = "1.2.0"
+tokio = { version = "1", features = ["macros"] }
+serde = "1.0.228"
+serde_json = "1.0.149"
+rust_calc = { version = "0.1.0", path = "../rust_calc" }
+flate2 = "1.1.9"

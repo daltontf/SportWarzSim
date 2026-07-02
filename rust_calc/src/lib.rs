@@ -16,11 +16,18 @@ use wkt::TryFromWkt;
 pub const EPSG_4326: &str = "EPSG:4326";
 pub const EPSG_5070: &str = "EPSG:5070";
 pub const METERS_TO_MILES: f64 = 0.000621371;
+
 pub const OUTSIDE_LOWER48_MULTIPLIER: f64 = 2.0;
 pub const NOT_NEAREST_MULTIPLER: f64 = 2.0;
 pub const NON_SAME_STATE_MULTIPLIER: f64 = 2.0;
 pub const DISTANCE_DECAY_NUMERATOR: f64 = 0.0025;
 pub const COMPETITION_TEMPERATURE_BASE: f64 = 1.25;
+
+pub const OUTSIDE_LOWER48_MULTIPLIER_KEY: &str = "outside_lower48_multiplier";
+pub const NOT_NEAREST_MULTIPLIER_KEY: &str = "not_nearest_multiplier";
+pub const NON_SAME_STATE_MULTIPLIER_KEY: &str = "non_same_state_multiplier";
+pub const DISTANCE_DECAY_NUMERATOR_KEY: &str = "distance_decay_numerator";
+pub const COMPETITION_TEMPERATURE_BASE_KEY: &str = "competition_temperature_base";
 
 #[derive(Deserialize)]
 #[cfg_attr(test, derive(Serialize))]
@@ -184,9 +191,25 @@ impl LeagueStatsCalculator {
     }
 
     pub fn load_league(&self, league: &League) -> LeagueStats {
+        self.load_league_with_overrides(league, HashMap::new())
+    }
+
+    pub fn load_league_with_overrides(&self, league: &League, overrides: HashMap<String, f64>) -> LeagueStats {
+        println!("overrides = {:?}", overrides);
         let start = Instant::now();
 
         let transform = Proj::new_known_crs(EPSG_4326, EPSG_5070, None).unwrap();
+
+        let distance_decay_numerator = *overrides.get(DISTANCE_DECAY_NUMERATOR_KEY)
+            .unwrap_or(&self.distance_decay_numerator);
+        let outside_lower48_multiplier = *overrides.get(OUTSIDE_LOWER48_MULTIPLIER_KEY)
+            .unwrap_or(&self.outside_lower48_multiplier);
+        let not_nearest_multiplier = *overrides.get(NOT_NEAREST_MULTIPLIER_KEY)
+            .unwrap_or(&self.not_nearest_multiplier); 
+        let non_same_state_multiplier = *overrides.get(NON_SAME_STATE_MULTIPLIER_KEY)
+            .unwrap_or(&self.non_same_state_multiplier);
+        let competition_temperature_base = *overrides.get(COMPETITION_TEMPERATURE_BASE_KEY)
+            .unwrap_or(&self.competition_temperature_base);
 
         let teams_coords5070: Vec<Point> = league
             .teams
@@ -200,7 +223,7 @@ impl LeagueStatsCalculator {
             })
             .collect();
 
-        let league_distance_decay = self.distance_decay_numerator / league.weight;
+        let league_distance_decay = distance_decay_numerator / league.weight;
 
         let all_county_map: HashMap<u32, CountyStats> = self.all_data
                 .par_iter()
@@ -216,7 +239,7 @@ impl LeagueStatsCalculator {
                             let line_length = line_geos.length().unwrap() as f64 * METERS_TO_MILES;
                             let intersection_length = intersection.length().unwrap() as f64 * METERS_TO_MILES;
 
-                            intersection_length + ((line_length - intersection_length) * self.outside_lower48_multiplier)
+                            intersection_length + ((line_length - intersection_length) * outside_lower48_multiplier)
                         }).collect();
 
             let nearest_distance = *team_distances.min().unwrap();
@@ -229,16 +252,16 @@ impl LeagueStatsCalculator {
                 if effective_distance > nearest_distance {
                     // Every team that is not the nearest has the extra distance multiplied by NOT_NEAREST_MULTIPLER
                     // to increase its effectiv distance relative to the nearest team
-                    effective_distance = nearest_distance + ((effective_distance - nearest_distance) * self.not_nearest_multiplier)
+                    effective_distance = nearest_distance + ((effective_distance - nearest_distance) * not_nearest_multiplier)
                 }
                 // Any team not in the same state or states if team market spans multiple states (KC)
                 // has its distance multiplied by NON_SAME_STATE_MULTIPLIER
                 match &team.state {
                     StateOrStates::State(state) if state != &county.state_name => {
-                        effective_distance *= self.non_same_state_multiplier;
+                        effective_distance *= non_same_state_multiplier;
                     },
                     StateOrStates::States(states) if !states.contains(&county.state_name) => {
-                        effective_distance *= self.non_same_state_multiplier;
+                        effective_distance *= non_same_state_multiplier;
                     },
                     _ => {}
                 }
@@ -255,7 +278,7 @@ impl LeagueStatsCalculator {
 
                 value_multipliers[i] = f64::exp(-f64::min(effective_distance, 200.0) / 50.0) * league.weight;
             }
-            let exp_r = (value_r / self.competition_temperature_base).mapv(f64::exp);
+            let exp_r = (value_r / competition_temperature_base).mapv(f64::exp);
 
             let shares = &exp_r / exp_r.sum();
 

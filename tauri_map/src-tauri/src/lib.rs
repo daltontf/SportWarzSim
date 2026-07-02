@@ -1,6 +1,8 @@
 use rust_calc::{LeagueStatsCalculator, League, LeagueStats};
 use tauri::{Manager, State};
 
+use std::collections::HashMap;
+
 use std::sync::Mutex;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -17,9 +19,14 @@ pub fn run() {
             }
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![load_league, lookup_state_name_by_coordinates])
+        .invoke_handler(tauri::generate_handler![load_league, lookup_state_name_by_coordinates, load_league_with_overrides])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[tauri::command] 
+fn load_league_with_overrides(state: State<'_, Mutex<LeagueStatsCalculator>>, league: League, overrides: HashMap<String, f64>) -> LeagueStats {
+    state.lock().unwrap().load_league_with_overrides(&league, overrides)
 }
 
 #[tauri::command] 

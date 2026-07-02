@@ -8,7 +8,8 @@ import './index.css';
 
 let calculator: CalculatorInteface = {
     getCalculationsForLeague: async (league:any) => {
-      return invoke('load_league', { league })
+      // return invoke('load_league', { league })
+    return invoke('load_league_with_overrides', { league, overrides: { competition_temperature_base: 1.0 } })
     },
     getStateForCoordinates: async (lat:number, lon:number) => {
       return invoke('lookup_state_name_by_coordinates', { lat, lon })
